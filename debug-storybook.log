@@ -1,0 +1,296 @@
+[19:14:36.159] [DEBUG] Command "yarn.cmd" not found, trying next variation...
+[19:14:36.214] [DEBUG] Command "yarn.exe" not found, trying next variation...
+[19:14:36.270] [DEBUG] Command "yarn.ps1" not found, trying next variation...
+[19:14:36.854] [INFO] [36mInitializing Storybook[39m
+[19:14:36.916] [DEBUG] Command "yarn.cmd" not found, trying next variation...
+[19:14:36.972] [DEBUG] Command "yarn.exe" not found, trying next variation...
+[19:14:37.030] [DEBUG] Command "yarn.ps1" not found, trying next variation...
+[19:14:37.622] [DEBUG] Getting package.json info for D:/dev/Placc-sacc-frontend/placc-sacc-frontend/package.json...
+[19:14:37.622] [INFO] Package manager: pnpm
+[19:14:37.624] [DEBUG] Getting CLI versions from NPM for storybook...
+[19:14:37.624] [DEBUG] Executing command: pnpm info storybook version
+[19:14:37.625] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:38.687] [INFO] Adding Storybook version 10.4.6 to your project
+[19:14:38.687] [DEBUG] Executing command: pnpm config get minimumReleaseAge
+[19:14:38.688] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:39.215] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:39.215] [DEBUG] Project type detected: tanstack_react
+[19:14:39.215] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:39.217] [INFO] Framework detected: tanstack-react
+[19:14:39.218] [DEBUG] Getting installed version for vitest...
+[19:14:39.221] [DEBUG] Executing command: pnpm list "vitest" --json --depth=99
+[19:14:39.222] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:39.833] [DEBUG] Installed version for vitest: 4.1.9
+[19:14:39.833] [DEBUG] Getting installed version for msw...
+[19:14:39.833] [DEBUG] Executing command: pnpm list "msw" --json --depth=99
+[19:14:39.834] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:40.437] [DEBUG] No installations found for msw
+[19:14:40.440] [INFO] Storybook collects completely anonymous usage telemetry. We use it to shape Storybook's roadmap and prioritize features. You can learn more, including how to opt out, at https://storybook.js.org/telemetry
+[19:14:40.925] [INFO] base-generator-task-start: Generating Storybook configuration
+[19:14:40.925] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:40.925] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:40.925] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:40.926] [INFO] base-generator-task: - Configuring ESLint plugin
+[19:14:40.926] [DEBUG] Detected flat config at D:\dev\Placc-sacc-frontend\placc-sacc-frontend\eslint.config.js
+[19:14:40.953] [DEBUG] Using cached version for storybook...
+[19:14:40.953] [DEBUG] Getting CLI versions from NPM for @storybook/tanstack-react...
+[19:14:40.953] [DEBUG] Executing command: pnpm info @storybook/tanstack-react version
+[19:14:40.954] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:40.974] [DEBUG] Getting CLI versions from NPM for @chromatic-com/storybook...
+[19:14:40.974] [DEBUG] Executing command: pnpm info @chromatic-com/storybook version
+[19:14:40.976] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:40.999] [DEBUG] Getting CLI versions from NPM for @storybook/addon-vitest...
+[19:14:40.999] [DEBUG] Executing command: pnpm info @storybook/addon-vitest version
+[19:14:41.000] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:41.020] [DEBUG] Getting CLI versions from NPM for @storybook/addon-a11y...
+[19:14:41.020] [DEBUG] Executing command: pnpm info @storybook/addon-a11y version
+[19:14:41.022] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:41.046] [DEBUG] Getting CLI versions from NPM for @storybook/addon-docs...
+[19:14:41.046] [DEBUG] Executing command: pnpm info @storybook/addon-docs version
+[19:14:41.047] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:41.072] [DEBUG] Getting CLI versions from NPM for @storybook/addon-mcp...
+[19:14:41.072] [DEBUG] Executing command: pnpm info @storybook/addon-mcp version
+[19:14:41.073] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:41.102] [DEBUG] Getting CLI versions from NPM for eslint-plugin-storybook...
+[19:14:41.102] [DEBUG] Executing command: pnpm info eslint-plugin-storybook version
+[19:14:41.103] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:42.257] [INFO] base-generator-task: - Configuring main.ts
+[19:14:42.259] [INFO] base-generator-task: - Configuring preview.ts
+[19:14:42.262] [INFO] base-generator-task: - Adding Storybook command to package.json
+[19:14:42.263] [DEBUG] Getting package.json info for D:/dev/Placc-sacc-frontend/placc-sacc-frontend/package.json...
+[19:14:42.263] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:42.263] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:42.264] [INFO] base-generator-task: - Copying framework templates
+[19:14:42.295] [DEBUG] Executing command: npm config get registry -ws=false -iwr
+[19:14:42.296] [DEBUG] Resolved command variation: npm.cmd
+[19:14:43.011] [INFO] base-generator-task-success: Storybook configuration generated
+[19:14:43.012] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:43.012] [DEBUG] Using cached installed version for vitest...
+[19:14:43.012] [DEBUG] Getting installed version for @vitest/coverage-v8...
+[19:14:43.012] [DEBUG] Executing command: pnpm list "@vitest/coverage-v8" --json --depth=99
+[19:14:43.013] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:43.659] [DEBUG] No installations found for @vitest/coverage-v8
+[19:14:43.659] [DEBUG] Getting installed version for @vitest/coverage-istanbul...
+[19:14:43.659] [DEBUG] Executing command: pnpm list "@vitest/coverage-istanbul" --json --depth=99
+[19:14:43.660] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:44.280] [DEBUG] No installations found for @vitest/coverage-istanbul
+[19:14:44.281] [INFO] adding-dependencies-task-start: Adding dependencies to package.json
+[19:14:44.281] [INFO] adding-dependencies-task: Adding devDependencies:
+- storybook@^10.4.6
+- @storybook/tanstack-react@^10.4.6
+- @chromatic-com/storybook@^5.2.1
+- @storybook/addon-vitest@^10.4.6
+- @storybook/addon-a11y@^10.4.6
+- @storybook/addon-docs@^10.4.6
+- @storybook/addon-mcp@^0.6.0
+- eslint-plugin-storybook@^10.4.6
+- playwright
+- @vitest/browser-playwright@4.1.9
+- @vitest/coverage-v8@4.1.9
+[19:14:44.282] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:44.282] [DEBUG] Using cached version for storybook...
+[19:14:44.282] [DEBUG] Using cached version for @storybook/tanstack-react...
+[19:14:44.282] [DEBUG] Using cached version for @chromatic-com/storybook...
+[19:14:44.282] [DEBUG] Using cached version for @storybook/addon-vitest...
+[19:14:44.282] [DEBUG] Using cached version for @storybook/addon-a11y...
+[19:14:44.282] [DEBUG] Using cached version for @storybook/addon-docs...
+[19:14:44.282] [DEBUG] Using cached version for @storybook/addon-mcp...
+[19:14:44.282] [DEBUG] Using cached version for eslint-plugin-storybook...
+[19:14:44.282] [DEBUG] Getting CLI versions from NPM for playwright...
+[19:14:44.282] [DEBUG] Executing command: pnpm info playwright version
+[19:14:44.283] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:45.401] [DEBUG] Getting CLI versions from NPM for @vitest/browser-playwright...
+[19:14:45.401] [DEBUG] Executing command: pnpm info @vitest/browser-playwright version
+[19:14:45.402] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:46.358] [DEBUG] Getting CLI versions from NPM for @vitest/coverage-v8...
+[19:14:46.358] [DEBUG] Executing command: pnpm info @vitest/coverage-v8 version
+[19:14:46.359] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:47.082] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:14:47.083] [INFO] adding-dependencies-task-success: Dependencies added to package.json
+[19:14:47.083] [INFO] Installing dependencies...
+[19:14:47.084] [INFO] install-dependencies-spinner-start: Installing dependencies...
+[19:14:47.085] [DEBUG] Executing command: pnpm install -w
+[19:14:47.086] [DEBUG] Resolved command variation: pnpm.cmd
+[19:14:47.683] [INFO] Installing dependencies...: ✓ Lockfile passes supply-chain policies (verified 4m ago)
+
+[19:14:47.683] [INFO] install-dependencies-spinner: Installing dependencies...: ✓ Lockfile passes supply-
+[19:14:47.762] [INFO] Installing dependencies...: Progress: resolved 1, reused 0, downloaded 0, added 0
+
+[19:14:47.762] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 1, reu
+[19:14:49.545] [INFO] Installing dependencies...: Progress: resolved 35, reused 29, downloaded 3, added 0
+
+[19:14:49.545] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 35, re
+[19:14:50.545] [INFO] Installing dependencies...: Progress: resolved 39, reused 29, downloaded 10, added 0
+
+[19:14:50.545] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 39, re
+[19:14:51.561] [INFO] Installing dependencies...: Progress: resolved 129, reused 81, downloaded 18, added 0
+
+[19:14:51.561] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 129, r
+[19:14:52.565] [INFO] Installing dependencies...: Progress: resolved 209, reused 161, downloaded 46, added 0
+
+[19:14:52.565] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 209, r
+[19:14:53.636] [INFO] Installing dependencies...: Progress: resolved 263, reused 182, downloaded 47, added 0
+
+[19:14:53.636] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 263, r
+[19:14:54.697] [INFO] Installing dependencies...: Progress: resolved 512, reused 293, downloaded 68, added 0
+
+[19:14:54.697] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 512, r
+[19:15:08.776] [INFO] Installing dependencies...: Progress: resolved 625, reused 361, downloaded 99, added 0
+
+[19:15:08.776] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 625, r
+[19:15:09.693] [INFO] Installing dependencies...: Progress: resolved 653, reused 382, downloaded 132, added 0
+
+[19:15:09.693] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 653, r
+[19:15:09.724] [INFO] Installing dependencies...: Packages: +140 -11
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------
+
+[19:15:09.724] [INFO] install-dependencies-spinner: Installing dependencies...: Packages: +140 -11
+++++++
+[19:15:10.642] [INFO] Installing dependencies...: Progress: resolved 653, reused 382, downloaded 132, added 140, done
+
+[19:15:10.642] [INFO] install-dependencies-spinner: Installing dependencies...: Progress: resolved 653, r
+[19:15:11.425] [INFO] Installing dependencies...: [WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+
+[19:15:11.425] [INFO] install-dependencies-spinner: Installing dependencies...: [WARN] Issues with peer d
+[19:15:11.425] [INFO] Installing dependencies...: 
+devDependencies:
++ @chromatic-com/storybook 5.2.1
++ @storybook/addon-a11y 10.4.6
++ @storybook/addon-docs 10.4.6
++ @storybook/addon-mcp 0.6.0
++ @storybook/addon-vitest 10.4.6
++ @storybook/tanstack-react 10.4.6
++ @vitest/browser-playwright 4.1.9
++ @vitest/coverage-v8 4.1.9
++ eslint-plugin-storybook 10.4.6
++ playwright 1.61.1
++ storybook 10.4.6
+
+
+[19:15:11.425] [INFO] install-dependencies-spinner: Installing dependencies...: devDependencies:
++ @chrom
+[19:15:11.426] [INFO] Installing dependencies...: Added 2 entries to minimumReleaseAgeExclude in pnpm-workspace.yaml (set minimumReleaseAgeStrict to true to gate these updates with a prompt):
+  playwright-core@1.61.1
+  playwright@1.61.1
+
+[19:15:11.426] [INFO] install-dependencies-spinner: Installing dependencies...: Added 2 entries to minimu
+[19:15:11.568] [INFO] Installing dependencies...: [ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.28.1, unrs-resolver@1.12.2
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+[19:15:11.568] [INFO] install-dependencies-spinner: Installing dependencies...: [ERR_PNPM_IGNORED_BUILDS]
+[19:15:11.972] [ERROR] Installation of dependencies failed! {"error":"ExecaError: Command failed with exit code 1: pnpm.cmd install -w\n\n[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\". See https://pnpm.io/settings for the new home of each setting.\n\n✓ Lockfile passes supply-chain policies (verified 4m ago)\nProgress: resolved 1, reused 0, downloaded 0, added 0\nProgress: resolved 35, reused 29, downloaded 3, added 0\nProgress: resolved 39, reused 29, downloaded 10, added 0\nProgress: resolved 129, reused 81, downloaded 18, added 0\nProgress: resolved 209, reused 161, downloaded 46, added 0\nProgress: resolved 263, reused 182, downloaded 47, added 0\nProgress: resolved 512, reused 293, downloaded 68, added 0\nProgress: resolved 625, reused 361, downloaded 99, added 0\nProgress: resolved 653, reused 382, downloaded 132, added 0\nPackages: +140 -11\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------\nProgress: resolved 653, reused 382, downloaded 132, added 140, done\n[WARN] Issues with peer dependencies found. Run \"pnpm peers check\" to list them.\n\ndevDependencies:\n+ @chromatic-com/storybook 5.2.1\n+ @storybook/addon-a11y 10.4.6\n+ @storybook/addon-docs 10.4.6\n+ @storybook/addon-mcp 0.6.0\n+ @storybook/addon-vitest 10.4.6\n+ @storybook/tanstack-react 10.4.6\n+ @vitest/browser-playwright 4.1.9\n+ @vitest/coverage-v8 4.1.9\n+ eslint-plugin-storybook 10.4.6\n+ playwright 1.61.1\n+ storybook 10.4.6\n\nAdded 2 entries to minimumReleaseAgeExclude in pnpm-workspace.yaml (set minimumReleaseAgeStrict to true to gate these updates with a prompt):\n  playwright-core@1.61.1\n  playwright@1.61.1\n[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.28.1, unrs-resolver@1.12.2\n\nRun \"pnpm approve-builds\" to pick which dependencies should be allowed to run scripts.\n    at getFinalError (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:11529:10)\n    at makeError (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:13065:15)\n    at getAsyncResult (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:15711:158)\n    at handlePromise (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:15697:162)\n    at async Object.executeTaskWithSpinner (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-YBD2A4LF.js:3683:11)\n    at async PNPMProxy.installDependencies (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:9679:5)\n    at async PNPMProxy.installDependencies (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:16716:7)\n    at async DependencyInstallationCommand.execute (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/create-storybook/dist/_node-chunks/chunk-SGWNRTQ7.js:2301:9)\n    at async doInitiate (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/create-storybook/dist/_node-chunks/chunk-SGWNRTQ7.js:3535:38)\n    at async file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/create-storybook/dist/_node-chunks/chunk-SGWNRTQ7.js:3590:20"}
+[19:15:11.972] [ERROR] install-dependencies-spinner-error: [31mInstallation of dependencies failed![39m
+[19:15:11.997] [INFO] configure-addons-task-start: Configuring addons...
+[19:15:11.997] [INFO] configure-addons-task: Configuring @chromatic-com/storybook...
+[19:15:12.000] [INFO] configure-addons-task: @chromatic-com/storybook configured
+
+[19:15:12.001] [INFO] configure-addons-task: Configuring @storybook/addon-vitest...
+[19:15:12.002] [DEBUG] Getting package.json info for D:/dev/Placc-sacc-frontend/placc-sacc-frontend/package.json...
+[19:15:12.002] [DEBUG] Using cached package.json for D:\dev\Placc-sacc-frontend\placc-sacc-frontend\package.json...
+[19:15:12.002] [DEBUG] Using cached installed version for vitest...
+[19:15:12.002] [DEBUG] Vitest version specifier: 4.1.9
+[19:15:12.152] [DEBUG] Using cached installed version for vitest...
+[19:15:12.152] [DEBUG] Using cached installed version for msw...
+[19:15:12.185] [INFO] Updating your Vite config file:
+[19:15:12.185] [INFO]   D:\dev\Placc-sacc-frontend\placc-sacc-frontend\vite.config.ts
+[19:15:12.197] [INFO] Setting up a11y addon for @storybook/addon-vitest
+[19:15:12.197] [INFO] Setting up a11y addon for @storybook/addon-vitest
+[19:15:12.197] [DEBUG] Executing command: pnpm dlx storybook@10.4.6 automigrate addon-a11y-addon-test --loglevel silent --yes --skip-doctor --package-manager pnpm --skip-install
+[19:15:12.198] [DEBUG] Resolved command variation: pnpm.cmd
+[19:15:36.325] [INFO] a11y addon setup successfully
+[19:15:36.325] [INFO] [32ma11y addon setup successfully[39m
+[19:15:36.325] [INFO] [32m@storybook/addon-vitest setup completed successfully[39m
+[19:15:36.326] [INFO] @storybook/addon-vitest is now configured and you're ready to run your tests!
+Here are a couple of tips to get you started:
+
+• You can run tests with "[36mnpx vitest --project=storybook[39m"
+• Vitest IDE extension shows all stories as tests in your editor!
+
+Check the documentation for more information about its features and options at:
+https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
+[19:15:36.326] [INFO] configure-addons-task: @storybook/addon-vitest configured
+
+[19:15:36.326] [INFO] configure-addons-task: Configuring @storybook/addon-a11y...
+[19:15:36.327] [DEBUG] Executing command: pnpm dlx storybook@10.4.6 automigrate addon-a11y-addon-test --loglevel silent --skip-doctor --yes --package-manager pnpm --config-dir .storybook
+[19:15:36.327] [DEBUG] Resolved command variation: pnpm.cmd
+[19:15:45.072] [DEBUG] {
+  "shortMessage": "Command failed with exit code 1: pnpm.cmd dlx \"storybook@10.4.6\" automigrate addon-a11y-addon-test --loglevel silent --skip-doctor --yes --package-manager pnpm --config-dir .storybook",
+  "command": "pnpm.cmd dlx storybook@10.4.6 automigrate addon-a11y-addon-test --loglevel silent --skip-doctor --yes --package-manager pnpm --config-dir .storybook",
+  "escapedCommand": "pnpm.cmd dlx \"storybook@10.4.6\" automigrate addon-a11y-addon-test --loglevel silent --skip-doctor --yes --package-manager pnpm --config-dir .storybook",
+  "cwd": "D:\\dev\\Placc-sacc-frontend\\placc-sacc-frontend",
+  "durationMs": 8744.0883,
+  "failed": true,
+  "timedOut": false,
+  "isCanceled": false,
+  "isGracefullyCanceled": false,
+  "isTerminated": false,
+  "isMaxBuffer": false,
+  "isForcefullyTerminated": false,
+  "exitCode": 1,
+  "stdout": "",
+  "stderr": "[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\". See https://pnpm.io/settings for the new home of each setting.",
+  "stdio": [
+    null,
+    "",
+    "[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\". See https://pnpm.io/settings for the new home of each setting."
+  ],
+  "ipcOutput": [],
+  "pipedFrom": []
+}
+[19:15:45.072] [INFO] configure-addons-task: Configuring @storybook/addon-docs...
+[19:15:45.076] [INFO] configure-addons-task: @storybook/addon-docs configured
+
+[19:15:45.076] [INFO] configure-addons-task: Configuring @storybook/addon-mcp...
+[19:15:45.079] [INFO] configure-addons-task: @storybook/addon-mcp configured
+
+[19:15:45.080] [ERROR] configure-addons-task-error: Failed to configure addons
+[19:15:45.080] [INFO] [2m✅ @chromatic-com/storybook[22m
+[19:15:45.081] [INFO] [2m✅ @storybook/addon-vitest[22m
+[19:15:45.082] [INFO] [2m❌ @storybook/addon-a11y[22m
+[19:15:45.082] [INFO] [2m✅ @storybook/addon-docs[22m
+[19:15:45.082] [INFO] [2m✅ @storybook/addon-mcp[22m
+[19:15:45.082] [INFO] Installing Playwright browser binaries (press "c" to abort)
+[19:15:45.082] [INFO] playwright-installation-spinner-start: Installing Playwright browser binaries (press "c" to abort)
+[19:15:45.083] [DEBUG] Executing command: pnpm exec playwright install chromium --with-deps
+[19:15:45.084] [DEBUG] Resolved command variation: pnpm.cmd
+[19:15:46.127] [INFO] Installing Playwright browser binaries (press "c" to abort): ✓ Lockfile passes supply-chain policies (verified 2s ago)
+
+[19:15:46.127] [INFO] playwright-installation-spinner: Installing Playwright browser binaries (press "c" to abort): ✓ Lockfile passes supply-
+[19:15:46.132] [INFO] Installing Playwright browser binaries (press "c" to abort): Lockfile is up to date, resolution step is skipped
+
+[19:15:46.132] [INFO] playwright-installation-spinner: Installing Playwright browser binaries (press "c" to abort): Lockfile is up to date, r
+[19:15:46.220] [INFO] Installing Playwright browser binaries (press "c" to abort): Already up to date
+
+[19:15:46.220] [INFO] playwright-installation-spinner: Installing Playwright browser binaries (press "c" to abort): Already up to date
+[19:15:46.692] [INFO] Installing Playwright browser binaries (press "c" to abort): 
+
+[19:15:46.692] [INFO] playwright-installation-spinner: Installing Playwright browser binaries (press "c" to abort): 
+[19:15:46.742] [INFO] Installing Playwright browser binaries (press "c" to abort): [ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.28.1, unrs-resolver@1.12.2
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+[19:15:46.742] [INFO] playwright-installation-spinner: Installing Playwright browser binaries (press "c" to abort): [ERR_PNPM_IGNORED_BUILDS]
+[19:15:46.995] [INFO] Installing Playwright browser binaries (press "c" to abort): [ERROR] Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Program Files\nodejs\node_modules\pnpm\bin\pnpm.mjs" install
+
+pnpm: Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Program Files\nodejs\node_modules\pnpm\bin\pnpm.mjs" install
+    at getFinalError (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:34291:14)
+    at makeError (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:36598:21)
+    at getSyncResult (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:38442:10)
+    at spawnSubprocessSync (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:38402:14)
+    at execaCoreSync (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:38332:23)
+    at callBoundExeca (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:40860:23)
+    at boundExeca (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:40837:49)
+    at sync (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:40996:10)
+    at runPnpmCli (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:247126:5)
+    at runDepsStatusCheck (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:248869:7)
+
+[19:15:46.995] [INFO] playwright-installation-spinner: Installing Playwright browser binaries (press "c" to abort): [ERROR] Command failed wi
+[19:15:47.233] [ERROR] An error occurred while installing Playwright browser binaries. Please run the following command later: pnpm exec playwright install chromium --with-deps {"error":"ExecaError: Command failed with exit code 1: pnpm.cmd exec playwright install chromium --with-deps\n\n[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\". See https://pnpm.io/settings for the new home of each setting.\n[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\". See https://pnpm.io/settings for the new home of each setting.\n\n✓ Lockfile passes supply-chain policies (verified 2s ago)\nLockfile is up to date, resolution step is skipped\nAlready up to date\n\n[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.28.1, unrs-resolver@1.12.2\n\nRun \"pnpm approve-builds\" to pick which dependencies should be allowed to run scripts.\n[ERROR] Command failed with exit code 1: \"C:\\Program Files\\nodejs\\node.exe\" \"C:\\Program Files\\nodejs\\node_modules\\pnpm\\bin\\pnpm.mjs\" install\n\npnpm: Command failed with exit code 1: \"C:\\Program Files\\nodejs\\node.exe\" \"C:\\Program Files\\nodejs\\node_modules\\pnpm\\bin\\pnpm.mjs\" install\n    at getFinalError (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:34291:14)\n    at makeError (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:36598:21)\n    at getSyncResult (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:38442:10)\n    at spawnSubprocessSync (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:38402:14)\n    at execaCoreSync (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:38332:23)\n    at callBoundExeca (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:40860:23)\n    at boundExeca (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:40837:49)\n    at sync (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:40996:10)\n    at runPnpmCli (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:247126:5)\n    at runDepsStatusCheck (file:///C:/Users/robobo1221/AppData/Roaming/nvm/v24.18.0/node_modules/pnpm/dist/pnpm.mjs:248869:7)\n    at getFinalError (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:11529:10)\n    at makeError (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:13065:15)\n    at getAsyncResult (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:15711:158)\n    at handlePromise (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-6U2XPXR7.js:15697:162)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Object.executeTaskWithSpinner (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-YBD2A4LF.js:3683:11)\n    at async AddonVitestService.installPlaywright (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/storybook/dist/_node-chunks/chunk-WPDWCGPK.js:5856:17)\n    at async AddonConfigurationCommand.execute (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/create-storybook/dist/_node-chunks/chunk-SGWNRTQ7.js:2197:26)\n    at async doInitiate (file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/create-storybook/dist/_node-chunks/chunk-SGWNRTQ7.js:3547:3)\n    at async file:///C:/Users/robobo1221/AppData/Local/npm-cache/_npx/60944b67ced26ac3/node_modules/create-storybook/dist/_node-chunks/chunk-SGWNRTQ7.js:3590:20"}
+[19:15:47.233] [ERROR] playwright-installation-spinner-error: [31mAn error occurred while installing Playwright browser binaries. Please run the following command later: pnpm exec playwright install chromium --with-deps[39m
+[19:15:48.155] [WARN] Storybook setup completed, but some non-blocking errors occurred. Please check the log file below for details.
+[19:15:48.156] [INFO] To run Storybook, run [36mpnpm run storybook[39m. CTRL+C to stop.
+[19:15:48.157] [INFO] Official documentation reference: [36mhttps://storybook.js.org/llms.txt[39m
+[19:15:48.157] [INFO] To finalize setting up with AI, paste this prompt to your AI agent:
+
+[38;2;255;71;133mRun `npx storybook ai setup` and follow its instructions precisely.[39m
