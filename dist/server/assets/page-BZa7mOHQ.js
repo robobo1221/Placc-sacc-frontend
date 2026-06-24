@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { n as useSnackbar } from "./SnackbarProvider-Cdl3dNq5.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Box, Button, Card, CardContent, Checkbox, Chip, CircularProgress, Divider, FormControlLabel, LinearProgress, List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";
+import { feature } from "topojson-client";
 //#region src/api/json-api-client.ts
 var toSnakeCaseKey = (key) => key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/([A-Z])([A-Z][a-z])/g, "$1_$2").toLowerCase();
 var toCamelCaseKey = (key) => key.replace(/_+([a-zA-Z0-9])/g, (_, character) => character.toUpperCase());
@@ -79,7 +81,7 @@ var DjangoApiError = class extends JsonApiError {};
 * for example `http://localhost:8000/api`.
 */
 var DjangoApiClient = class extends JsonApiClient {
-	constructor(baseUrl = "http://localhost:8000/api") {
+	constructor(baseUrl = "https://placczak.rvp.xayo.info/api") {
 		super(baseUrl);
 	}
 	getWeatherData(sticky, options) {
@@ -184,7 +186,7 @@ var ForecastCard = ({ forecast }) => /* @__PURE__ */ jsx(Card, { children: /* @_
 		children: forecast?.forecast.map((item) => /* @__PURE__ */ jsxs(ListItem, {
 			divider: true,
 			sx: { px: 0 },
-			children: [/* @__PURE__ */ jsx(ListItemText, { primary: dayjs(item.datetime).format("DD MMM YYYY, HH:mm") }), /* @__PURE__ */ jsx(Chip, {
+			children: [/* @__PURE__ */ jsx(ListItemText, { primary: dayjs(item.datetime).format("DD MMM YYYY") }), /* @__PURE__ */ jsx(Chip, {
 				label: formatProbability(item.probability),
 				size: "small"
 			})]
@@ -193,11 +195,19 @@ var ForecastCard = ({ forecast }) => /* @__PURE__ */ jsx(Card, { children: /* @_
 ] }) });
 //#endregion
 //#region src/routes/components/Heatmap/Heatmap.tsx
-var HEATMAP_BOUNDS = {
+var NETHERLANDS_HEATMAP_BOUNDS = {
 	latMin: 50.750383,
 	latMax: 53.5,
 	lonMin: 3.358402,
 	lonMax: 7.22751
+};
+var NETHERLANDS_MAP_BOUNDS = [[50.2, 2.5], [54, 8]];
+var netherlandsGeometry;
+var loadNetherlandsGeometry = async () => {
+	if (netherlandsGeometry) return netherlandsGeometry;
+	const { default: countries50m } = await import("./countries-50m-DO216dcP.js");
+	netherlandsGeometry = feature(countries50m, countries50m.objects.countries.geometries.find(({ id }) => id === "528"));
+	return netherlandsGeometry;
 };
 var idwColor = (probability) => {
 	return `hsla(${Math.round((1 - Math.min(Math.max(probability, 0), 1)) * 240)}, 85%, 48%, 0.58)`;
@@ -209,12 +219,12 @@ var createHeatmapGrid = () => {
 		const row = Math.floor(index / columns);
 		const column = index % columns;
 		return {
-			lat: HEATMAP_BOUNDS.latMin + (HEATMAP_BOUNDS.latMax - HEATMAP_BOUNDS.latMin) * row / (rows - 1),
-			lon: HEATMAP_BOUNDS.lonMin + (HEATMAP_BOUNDS.lonMax - HEATMAP_BOUNDS.lonMin) * column / (columns - 1)
+			lat: NETHERLANDS_HEATMAP_BOUNDS.latMin + (NETHERLANDS_HEATMAP_BOUNDS.latMax - NETHERLANDS_HEATMAP_BOUNDS.latMin) * row / (rows - 1),
+			lon: NETHERLANDS_HEATMAP_BOUNDS.lonMin + (NETHERLANDS_HEATMAP_BOUNDS.lonMax - NETHERLANDS_HEATMAP_BOUNDS.lonMin) * column / (columns - 1)
 		};
 	});
 };
-var createIdwLayer = (leaflet, points) => {
+var createIdwLayer = (leaflet, geometry, points) => {
 	return new (leaflet.Layer.extend({
 		onAdd(map) {
 			this.map = map;
@@ -239,6 +249,18 @@ var createIdwLayer = (leaflet, points) => {
 			leaflet.DomUtil.setPosition(canvas, topLeft);
 			const context = canvas.getContext("2d");
 			if (!context) return;
+			const polygons = geometry.geometry.type === "Polygon" ? [geometry.geometry.coordinates] : geometry.geometry.coordinates;
+			context.save();
+			context.beginPath();
+			for (const polygon of polygons) for (const ring of polygon) {
+				ring.forEach(([lon, lat], index) => {
+					const point = map.latLngToContainerPoint([lat, lon]);
+					if (index === 0) context.moveTo(point.x, point.y);
+					else context.lineTo(point.x, point.y);
+				});
+				context.closePath();
+			}
+			context.clip("evenodd");
 			const projectedPoints = points.map((point) => ({
 				point: map.latLngToContainerPoint([point.lat, point.lon]),
 				probability: point.probability
@@ -261,47 +283,81 @@ var createIdwLayer = (leaflet, points) => {
 				context.fillStyle = idwColor(numerator / denominator);
 				context.fillRect(x, y, cellSize, cellSize);
 			}
+			context.restore();
 		}
 	}))();
 };
-var Heatmap = () => {
+var Heatmap = ({ regenerateToken }) => {
 	const queryClient = useQueryClient();
+	const { showSnackbar } = useSnackbar();
 	const [heatmap, setHeatmap] = useState([]);
 	const [progress, setProgress] = useState(0);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const mapContainerRef = useRef(null);
 	const mapRef = useRef(null);
 	const grid = useMemo(createHeatmapGrid, []);
-	const generate = async () => {
+	const generate = useCallback(async () => {
 		setIsGenerating(true);
 		setProgress(0);
-		let completed = 0;
-		setHeatmap((await Promise.all(grid.map(async (point) => {
-			try {
-				const prediction = await queryClient.fetchQuery(stickyPredictionQueryOptions(point));
-				return {
-					...point,
-					probability: prediction.probability
-				};
-			} catch {
-				return null;
-			} finally {
-				completed += 1;
-				setProgress(completed / grid.length * 100);
-			}
-		}))).filter((point) => point !== null));
-		setIsGenerating(false);
-	};
+		try {
+			await loadNetherlandsGeometry();
+			let completed = 0;
+			const generatedHeatmap = (await Promise.all(grid.map(async (point) => {
+				try {
+					const prediction = await queryClient.fetchQuery(stickyPredictionQueryOptions(point));
+					return {
+						...point,
+						probability: prediction.probability
+					};
+				} catch {
+					return null;
+				} finally {
+					completed += 1;
+					setProgress(completed / grid.length * 100);
+				}
+			}))).filter((point) => point !== null);
+			setHeatmap(generatedHeatmap);
+			if (generatedHeatmap.length > 0) showSnackbar("Heatmap generated successfully.");
+			else showSnackbar("Unable to generate heatmap data.", "error");
+		} catch {
+			showSnackbar("Unable to generate the heatmap.", "error");
+		} finally {
+			setIsGenerating(false);
+		}
+	}, [
+		grid,
+		queryClient,
+		showSnackbar
+	]);
+	useEffect(() => {
+		if (regenerateToken > 0) generate();
+	}, [generate, regenerateToken]);
 	useEffect(() => {
 		if (!mapContainerRef.current || heatmap.length === 0) return;
 		let isDisposed = false;
 		import("leaflet").then((leaflet) => {
 			if (isDisposed || !mapContainerRef.current) return;
+			const geometry = netherlandsGeometry;
+			if (!geometry) return;
 			if (!mapRef.current) {
-				const instance = leaflet.map(mapContainerRef.current, { scrollWheelZoom: true }).setView([52.370216, 4.895168], 7);
+				const netherlandsBounds = leaflet.latLngBounds(NETHERLANDS_MAP_BOUNDS);
+				const instance = leaflet.map(mapContainerRef.current, {
+					maxBounds: netherlandsBounds,
+					maxBoundsViscosity: 1,
+					scrollWheelZoom: true
+				}).fitBounds(netherlandsBounds);
+				instance.setMinZoom(instance.getZoom());
 				leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 					attribution: "© OpenStreetMap contributors",
 					maxZoom: 18
+				}).addTo(instance);
+				leaflet.geoJSON(geometry, {
+					interactive: false,
+					style: {
+						color: "#263238",
+						fill: false,
+						weight: 1.5
+					}
 				}).addTo(instance);
 				mapRef.current = {
 					instance,
@@ -310,7 +366,7 @@ var Heatmap = () => {
 				requestAnimationFrame(() => instance.invalidateSize());
 			}
 			mapRef.current.heatmapLayer?.remove();
-			const heatmapLayer = createIdwLayer(leaflet, heatmap);
+			const heatmapLayer = createIdwLayer(leaflet, geometry, heatmap);
 			heatmapLayer.addTo(mapRef.current.instance);
 			mapRef.current.heatmapLayer = heatmapLayer;
 		});
@@ -469,6 +525,7 @@ function Home() {
 	const queryClient = useQueryClient();
 	const { coordinates, error: locationError, isLoading } = useCurrentLocation();
 	const [sticky, setSticky] = useState(false);
+	const [heatmapRegenerateToken, setHeatmapRegenerateToken] = useState(0);
 	const predictionQuery = useQuery({
 		...stickyPredictionQueryOptions(coordinates ?? {
 			lat: 0,
@@ -485,9 +542,10 @@ function Home() {
 	});
 	const captureMutation = useMutation({
 		mutationFn: (input) => djangoApi.captureWeatherData(input),
-		onSuccess: async () => {
+		onSuccess: async (_, input) => {
 			if (!coordinates) return;
 			await Promise.all([queryClient.invalidateQueries({ queryKey: djangoQueryKeys.stickyPrediction(coordinates) }), queryClient.invalidateQueries({ queryKey: djangoQueryKeys.stickyForecast(coordinates) })]);
+			if (input.sticky) setHeatmapRegenerateToken((token) => token + 1);
 		}
 	});
 	const dataError = predictionQuery.error ?? forecastQuery.error;
@@ -495,15 +553,6 @@ function Home() {
 		spacing: 3,
 		sx: { py: 4 },
 		children: [
-			/* @__PURE__ */ jsxs(Box, { children: [/* @__PURE__ */ jsx(Typography, {
-				component: "h1",
-				variant: "h3",
-				gutterBottom: true,
-				children: "Placczacc weather"
-			}), /* @__PURE__ */ jsx(Typography, {
-				color: "text.secondary",
-				children: "Local sticky-ball probability, forecast, and regional heatmap."
-			})] }),
 			/* @__PURE__ */ jsx(LocationStatus, {
 				hasCaptureError: captureMutation.isError,
 				hasDataError: Boolean(dataError),
@@ -531,7 +580,7 @@ function Home() {
 				})]
 			}),
 			/* @__PURE__ */ jsx(ForecastCard, { forecast: forecastQuery.data }),
-			/* @__PURE__ */ jsx(Heatmap, {})
+			/* @__PURE__ */ jsx(Heatmap, { regenerateToken: heatmapRegenerateToken })
 		]
 	});
 }

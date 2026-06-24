@@ -1,0 +1,9 @@
+node_modules
+dist
+storybook-static
+.git
+.env
+.env.*
+!.env.example
+.idea
+debug-storybook.log

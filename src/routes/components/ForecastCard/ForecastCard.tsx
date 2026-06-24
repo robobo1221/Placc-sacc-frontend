@@ -34,7 +34,7 @@ export const ForecastCard = ({ forecast }: ForecastCardProps) => (
         {forecast?.forecast.map((item) => (
           <ListItem divider key={item.datetime} sx={{ px: 0 }}>
             <ListItemText
-              primary={dayjs(item.datetime).format('DD MMM YYYY, HH:mm')}
+              primary={dayjs(item.datetime).format('DD MMM YYYY')}
             />
             <Chip label={formatProbability(item.probability)} size="small" />
           </ListItem>

@@ -1,0 +1,1 @@
+import{i as e}from"./preload-helper-CT_b8DTk.js";var t,n=e((()=>{t=e=>`${(e*100).toFixed(2)}%`}));export{n,t};

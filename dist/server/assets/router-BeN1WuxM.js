@@ -1,3 +1,4 @@
+import { t as SnackbarProvider } from "./SnackbarProvider-Cdl3dNq5.js";
 import { HeadContent, Outlet, Scripts, createFileRoute, createRootRouteWithContext, createRouter, lazyRouteComponent } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -75,16 +76,16 @@ function RootComponent() {
 		lang: "en",
 		children: [/* @__PURE__ */ jsx("head", { children: /* @__PURE__ */ jsx(HeadContent, {}) }), /* @__PURE__ */ jsxs("body", { children: [/* @__PURE__ */ jsxs(ThemeProvider, {
 			theme,
-			children: [/* @__PURE__ */ jsx(CssBaseline, { enableColorScheme: true }), /* @__PURE__ */ jsxs(TanstackQueryProvider, {
+			children: [/* @__PURE__ */ jsx(CssBaseline, { enableColorScheme: true }), /* @__PURE__ */ jsx(TanstackQueryProvider, {
 				queryClient,
-				children: [/* @__PURE__ */ jsx(AppBar, {}), /* @__PURE__ */ jsx(Container, { children: /* @__PURE__ */ jsx(Outlet, {}) })]
+				children: /* @__PURE__ */ jsxs(SnackbarProvider, { children: [/* @__PURE__ */ jsx(AppBar, {}), /* @__PURE__ */ jsx(Container, { children: /* @__PURE__ */ jsx(Outlet, {}) })] })
 			})]
 		}), /* @__PURE__ */ jsx(Scripts, {})] })]
 	});
 }
 //#endregion
 //#region src/routes/page.tsx
-var $$splitComponentImporter = () => import("./page-KKaGl5gR.js");
+var $$splitComponentImporter = () => import("./page-BZa7mOHQ.js");
 //#endregion
 //#region src/routeTree.gen.ts
 var rootRouteChildren = { PageRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({

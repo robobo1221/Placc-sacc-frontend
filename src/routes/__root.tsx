@@ -10,6 +10,7 @@ import {
 
 import TanstackQueryProvider from '../integrations/tanstack-query/root-provider'
 import { theme } from '../theme'
+import { SnackbarProvider } from '../components/SnackbarProvider/SnackbarProvider'
 
 import type { RouterContext } from '../integrations/tanstack-query/root-provider'
 import { Container } from '@mui/material'
@@ -31,10 +32,12 @@ function RootComponent() {
         <ThemeProvider theme={theme}>
           <CssBaseline enableColorScheme />
           <TanstackQueryProvider queryClient={queryClient}>
-            <AppBar />
-            <Container>
-              <Outlet />
-            </Container>
+            <SnackbarProvider>
+              <AppBar />
+              <Container>
+                <Outlet />
+              </Container>
+            </SnackbarProvider>
           </TanstackQueryProvider>
         </ThemeProvider>
         <Scripts />

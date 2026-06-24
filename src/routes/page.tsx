@@ -24,6 +24,7 @@ function Home() {
   const queryClient = useQueryClient()
   const { coordinates, error: locationError, isLoading } = useCurrentLocation()
   const [sticky, setSticky] = useState(false)
+  const [heatmapRegenerateToken, setHeatmapRegenerateToken] = useState(0)
 
   const predictionQuery = useQuery({
     ...stickyPredictionQueryOptions(coordinates ?? { lat: 0, lon: 0 }),
@@ -36,7 +37,7 @@ function Home() {
   const captureMutation = useMutation({
     mutationFn: (input: { lat: number; lon: number; sticky: boolean }) =>
       djangoApi.captureWeatherData(input),
-    onSuccess: async () => {
+    onSuccess: async (_, input) => {
       if (!coordinates) return
 
       await Promise.all([
@@ -47,6 +48,10 @@ function Home() {
           queryKey: djangoQueryKeys.stickyForecast(coordinates),
         }),
       ])
+
+      if (input.sticky) {
+        setHeatmapRegenerateToken((token) => token + 1)
+      }
     },
   })
 
@@ -54,15 +59,6 @@ function Home() {
 
   return (
     <Stack spacing={3} sx={{ py: 4 }}>
-      <Box>
-        <Typography component="h1" variant="h3" gutterBottom>
-          Placczacc weather
-        </Typography>
-        <Typography color="text.secondary">
-          Local sticky-ball probability, forecast, and regional heatmap.
-        </Typography>
-      </Box>
-
       <LocationStatus
         hasCaptureError={captureMutation.isError}
         hasDataError={Boolean(dataError)}
@@ -87,7 +83,7 @@ function Home() {
       </Stack>
 
       <ForecastCard forecast={forecastQuery.data} />
-      <Heatmap />
+      <Heatmap regenerateToken={heatmapRegenerateToken} />
     </Stack>
   )
 }

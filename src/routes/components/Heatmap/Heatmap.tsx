@@ -9,9 +9,11 @@ import {
 } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { feature } from 'topojson-client'
 
 import { stickyPredictionQueryOptions } from '#/api/django-queries'
+import { useSnackbar } from '#/components/SnackbarProvider/SnackbarProvider'
 
 import type { Coordinates } from '#/api/django-client'
 
@@ -20,11 +22,37 @@ type LeafletModule = typeof import('leaflet')
 type LeafletMap = import('leaflet').Map
 type LeafletLayer = import('leaflet').Layer
 
-const HEATMAP_BOUNDS = {
+const NETHERLANDS_HEATMAP_BOUNDS = {
   latMin: 50.750383,
   latMax: 53.5,
   lonMin: 3.358402,
   lonMax: 7.22751,
+}
+
+const NETHERLANDS_MAP_BOUNDS: [[number, number], [number, number]] = [
+  [50.2, 2.5],
+  [54, 8],
+]
+
+type NetherlandsGeometry = GeoJSON.Feature<
+  GeoJSON.Polygon | GeoJSON.MultiPolygon
+>
+
+let netherlandsGeometry: NetherlandsGeometry | undefined
+
+const loadNetherlandsGeometry = async () => {
+  if (netherlandsGeometry) return netherlandsGeometry
+
+  const { default: countries50m } =
+    await import('world-atlas/countries-50m.json')
+  netherlandsGeometry = feature(
+    countries50m as any,
+    countries50m.objects.countries.geometries.find(
+      ({ id }) => id === '528',
+    )! as any,
+  ) as NetherlandsGeometry
+
+  return netherlandsGeometry
 }
 
 const idwColor = (probability: number) => {
@@ -42,11 +70,16 @@ const createHeatmapGrid = (): Coordinates[] => {
 
     return {
       lat:
-        HEATMAP_BOUNDS.latMin +
-        ((HEATMAP_BOUNDS.latMax - HEATMAP_BOUNDS.latMin) * row) / (rows - 1),
+        NETHERLANDS_HEATMAP_BOUNDS.latMin +
+        ((NETHERLANDS_HEATMAP_BOUNDS.latMax -
+          NETHERLANDS_HEATMAP_BOUNDS.latMin) *
+          row) /
+          (rows - 1),
       lon:
-        HEATMAP_BOUNDS.lonMin +
-        ((HEATMAP_BOUNDS.lonMax - HEATMAP_BOUNDS.lonMin) * column) /
+        NETHERLANDS_HEATMAP_BOUNDS.lonMin +
+        ((NETHERLANDS_HEATMAP_BOUNDS.lonMax -
+          NETHERLANDS_HEATMAP_BOUNDS.lonMin) *
+          column) /
           (columns - 1),
     }
   })
@@ -54,6 +87,7 @@ const createHeatmapGrid = (): Coordinates[] => {
 
 const createIdwLayer = (
   leaflet: LeafletModule,
+  geometry: NetherlandsGeometry,
   points: HeatmapPoint[],
 ): LeafletLayer => {
   const IdwLayer = leaflet.Layer.extend({
@@ -86,6 +120,25 @@ const createIdwLayer = (
       const context = canvas.getContext('2d')
       if (!context) return
 
+      const polygons =
+        geometry.geometry.type === 'Polygon'
+          ? [geometry.geometry.coordinates]
+          : geometry.geometry.coordinates
+
+      context.save()
+      context.beginPath()
+      for (const polygon of polygons) {
+        for (const ring of polygon) {
+          ring.forEach(([lon, lat], index) => {
+            const point = map.latLngToContainerPoint([lat, lon])
+            if (index === 0) context.moveTo(point.x, point.y)
+            else context.lineTo(point.x, point.y)
+          })
+          context.closePath()
+        }
+      }
+      context.clip('evenodd')
+
       const projectedPoints = points.map((point) => ({
         point: map.latLngToContainerPoint([point.lat, point.lon]),
         probability: point.probability,
@@ -116,14 +169,21 @@ const createIdwLayer = (
           context.fillRect(x, y, cellSize, cellSize)
         }
       }
+
+      context.restore()
     },
   })
 
   return new IdwLayer()
 }
 
-export const Heatmap = () => {
+type HeatmapProps = {
+  regenerateToken: number
+}
+
+export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
   const queryClient = useQueryClient()
+  const { showSnackbar } = useSnackbar()
   const [heatmap, setHeatmap] = useState<HeatmapPoint[]>([])
   const [progress, setProgress] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -134,30 +194,52 @@ export const Heatmap = () => {
   } | null>(null)
   const grid = useMemo(createHeatmapGrid, [])
 
-  const generate = async () => {
+  const generate = useCallback(async () => {
     setIsGenerating(true)
     setProgress(0)
 
-    let completed = 0
-    const results = await Promise.all(
-      grid.map(async (point): Promise<HeatmapPoint | null> => {
-        try {
-          const prediction = await queryClient.fetchQuery(
-            stickyPredictionQueryOptions(point),
-          )
-          return { ...point, probability: prediction.probability }
-        } catch {
-          return null
-        } finally {
-          completed += 1
-          setProgress((completed / grid.length) * 100)
-        }
-      }),
-    )
+    try {
+      await loadNetherlandsGeometry()
 
-    setHeatmap(results.filter((point): point is HeatmapPoint => point !== null))
-    setIsGenerating(false)
-  }
+      let completed = 0
+      const results = await Promise.all(
+        grid.map(async (point): Promise<HeatmapPoint | null> => {
+          try {
+            const prediction = await queryClient.fetchQuery(
+              stickyPredictionQueryOptions(point),
+            )
+            return { ...point, probability: prediction.probability }
+          } catch {
+            return null
+          } finally {
+            completed += 1
+            setProgress((completed / grid.length) * 100)
+          }
+        }),
+      )
+
+      const generatedHeatmap = results.filter(
+        (point): point is HeatmapPoint => point !== null,
+      )
+      setHeatmap(generatedHeatmap)
+
+      if (generatedHeatmap.length > 0) {
+        showSnackbar('Heatmap generated successfully.')
+      } else {
+        showSnackbar('Unable to generate heatmap data.', 'error')
+      }
+    } catch {
+      showSnackbar('Unable to generate the heatmap.', 'error')
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [grid, queryClient, showSnackbar])
+
+  useEffect(() => {
+    if (regenerateToken > 0) {
+      void generate()
+    }
+  }, [generate, regenerateToken])
 
   useEffect(() => {
     if (!mapContainerRef.current || heatmap.length === 0) return
@@ -167,10 +249,20 @@ export const Heatmap = () => {
     void import('leaflet').then((leaflet) => {
       if (isDisposed || !mapContainerRef.current) return
 
+      const geometry = netherlandsGeometry
+      if (!geometry) return
+
       if (!mapRef.current) {
+        const netherlandsBounds = leaflet.latLngBounds(NETHERLANDS_MAP_BOUNDS)
         const instance = leaflet
-          .map(mapContainerRef.current, { scrollWheelZoom: true })
-          .setView([52.370216, 4.895168], 7)
+          .map(mapContainerRef.current, {
+            maxBounds: netherlandsBounds,
+            maxBoundsViscosity: 1,
+            scrollWheelZoom: true,
+          })
+          .fitBounds(netherlandsBounds)
+
+        instance.setMinZoom(instance.getZoom())
 
         leaflet
           .tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -179,12 +271,19 @@ export const Heatmap = () => {
           })
           .addTo(instance)
 
+        leaflet
+          .geoJSON(geometry, {
+            interactive: false,
+            style: { color: '#263238', fill: false, weight: 1.5 },
+          })
+          .addTo(instance)
+
         mapRef.current = { instance, heatmapLayer: null }
         requestAnimationFrame(() => instance.invalidateSize())
       }
 
       mapRef.current.heatmapLayer?.remove()
-      const heatmapLayer = createIdwLayer(leaflet, heatmap)
+      const heatmapLayer = createIdwLayer(leaflet, geometry, heatmap)
       heatmapLayer.addTo(mapRef.current.instance)
       mapRef.current.heatmapLayer = heatmapLayer
     })
