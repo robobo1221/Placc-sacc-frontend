@@ -9,7 +9,7 @@ export const AppBar = () => {
         component="div"
         sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
       >
-        Weather App
+        Placczacc weather
       </Typography>
     </Toolbar>
   )

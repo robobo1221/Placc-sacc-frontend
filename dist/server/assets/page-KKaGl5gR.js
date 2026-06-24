@@ -1,6 +1,5 @@
-import "./router-QasGj4eW.js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { jsx, jsxs } from "react/jsx-runtime";
+import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Box, Button, Card, CardContent, Checkbox, Chip, CircularProgress, Divider, FormControlLabel, LinearProgress, List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";
@@ -140,14 +139,66 @@ var stickyForecastQueryOptions = (coordinates) => queryOptions({
 	queryFn: () => djangoApi.getStickyForecast(coordinates)
 });
 //#endregion
-//#region src/routes/page.tsx?tsr-split=component
+//#region src/routes/utils/formatProbability.ts
+var formatProbability = (probability) => `${(probability * 100).toFixed(2)}%`;
+//#endregion
+//#region src/routes/components/CurrentProbabilityCard/CurrentProbabilityCard.tsx
+var CurrentProbabilityCard = ({ probability, isLoading }) => /* @__PURE__ */ jsx(Card, {
+	sx: { flex: 1 },
+	children: /* @__PURE__ */ jsxs(CardContent, { children: [
+		/* @__PURE__ */ jsx(Typography, {
+			component: "h2",
+			variant: "h6",
+			gutterBottom: true,
+			children: "Current probability"
+		}),
+		isLoading ? /* @__PURE__ */ jsx(CircularProgress, { size: 28 }) : /* @__PURE__ */ jsx(Typography, {
+			component: "p",
+			variant: "h2",
+			children: probability === void 0 ? "—" : formatProbability(probability)
+		}),
+		/* @__PURE__ */ jsx(Typography, {
+			color: "text.secondary",
+			variant: "body2",
+			sx: { mt: 1 },
+			children: "Estimated probability at your current location."
+		})
+	] })
+});
+//#endregion
+//#region src/routes/components/ForecastCard/ForecastCard.tsx
+var ForecastCard = ({ forecast }) => /* @__PURE__ */ jsx(Card, { children: /* @__PURE__ */ jsxs(CardContent, { children: [
+	/* @__PURE__ */ jsx(Typography, {
+		component: "h2",
+		variant: "h5",
+		children: "Forecast"
+	}),
+	/* @__PURE__ */ jsx(Typography, {
+		color: "text.secondary",
+		sx: { mb: 2 },
+		children: forecast ? `Nearest station: ${forecast.nearestStation}` : "Loading nearest weather station…"
+	}),
+	/* @__PURE__ */ jsx(Divider, {}),
+	/* @__PURE__ */ jsx(List, {
+		disablePadding: true,
+		children: forecast?.forecast.map((item) => /* @__PURE__ */ jsxs(ListItem, {
+			divider: true,
+			sx: { px: 0 },
+			children: [/* @__PURE__ */ jsx(ListItemText, { primary: dayjs(item.datetime).format("DD MMM YYYY, HH:mm") }), /* @__PURE__ */ jsx(Chip, {
+				label: formatProbability(item.probability),
+				size: "small"
+			})]
+		}, item.datetime))
+	})
+] }) });
+//#endregion
+//#region src/routes/components/Heatmap/Heatmap.tsx
 var HEATMAP_BOUNDS = {
 	latMin: 50.750383,
 	latMax: 53.5,
 	lonMin: 3.358402,
 	lonMax: 7.22751
 };
-var formatProbability = (probability) => `${(probability * 100).toFixed(2)}%`;
 var idwColor = (probability) => {
 	return `hsla(${Math.round((1 - Math.min(Math.max(probability, 0), 1)) * 240)}, 85%, 48%, 0.58)`;
 };
@@ -168,6 +219,7 @@ var createIdwLayer = (leaflet, points) => {
 		onAdd(map) {
 			this.map = map;
 			this.canvas = leaflet.DomUtil.create("canvas", "leaflet-layer leaflet-zoom-animated");
+			this.canvas.style.pointerEvents = "none";
 			map.getPanes().overlayPane.appendChild(this.canvas);
 			this.redraw = this.redraw.bind(this);
 			map.on("moveend zoomend resize", this.redraw);
@@ -202,7 +254,7 @@ var createIdwLayer = (leaflet, points) => {
 						denominator = 1;
 						break;
 					}
-					const weight = 1 / distanceSquared;
+					const weight = 1 / Math.pow(Math.sqrt(distanceSquared), 3);
 					numerator += sample.probability * weight;
 					denominator += weight;
 				}
@@ -212,19 +264,190 @@ var createIdwLayer = (leaflet, points) => {
 		}
 	}))();
 };
-function Home() {
+var Heatmap = () => {
 	const queryClient = useQueryClient();
-	const [coordinates, setCoordinates] = useState(null);
-	const [locationError, setLocationError] = useState(null);
-	const [sticky, setSticky] = useState(false);
 	const [heatmap, setHeatmap] = useState([]);
-	const [heatmapProgress, setHeatmapProgress] = useState(0);
-	const [isGeneratingHeatmap, setIsGeneratingHeatmap] = useState(false);
+	const [progress, setProgress] = useState(0);
+	const [isGenerating, setIsGenerating] = useState(false);
 	const mapContainerRef = useRef(null);
 	const mapRef = useRef(null);
+	const grid = useMemo(createHeatmapGrid, []);
+	const generate = async () => {
+		setIsGenerating(true);
+		setProgress(0);
+		let completed = 0;
+		setHeatmap((await Promise.all(grid.map(async (point) => {
+			try {
+				const prediction = await queryClient.fetchQuery(stickyPredictionQueryOptions(point));
+				return {
+					...point,
+					probability: prediction.probability
+				};
+			} catch {
+				return null;
+			} finally {
+				completed += 1;
+				setProgress(completed / grid.length * 100);
+			}
+		}))).filter((point) => point !== null));
+		setIsGenerating(false);
+	};
+	useEffect(() => {
+		if (!mapContainerRef.current || heatmap.length === 0) return;
+		let isDisposed = false;
+		import("leaflet").then((leaflet) => {
+			if (isDisposed || !mapContainerRef.current) return;
+			if (!mapRef.current) {
+				const instance = leaflet.map(mapContainerRef.current, { scrollWheelZoom: true }).setView([52.370216, 4.895168], 7);
+				leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+					attribution: "© OpenStreetMap contributors",
+					maxZoom: 18
+				}).addTo(instance);
+				mapRef.current = {
+					instance,
+					heatmapLayer: null
+				};
+				requestAnimationFrame(() => instance.invalidateSize());
+			}
+			mapRef.current.heatmapLayer?.remove();
+			const heatmapLayer = createIdwLayer(leaflet, heatmap);
+			heatmapLayer.addTo(mapRef.current.instance);
+			mapRef.current.heatmapLayer = heatmapLayer;
+		});
+		return () => {
+			isDisposed = true;
+		};
+	}, [heatmap]);
+	useEffect(() => () => {
+		mapRef.current?.instance.remove();
+		mapRef.current = null;
+	}, []);
+	return /* @__PURE__ */ jsx(Card, { children: /* @__PURE__ */ jsxs(CardContent, { children: [
+		/* @__PURE__ */ jsxs(Stack, {
+			alignItems: {
+				xs: "stretch",
+				sm: "center"
+			},
+			direction: {
+				xs: "column",
+				sm: "row"
+			},
+			justifyContent: "space-between",
+			spacing: 2,
+			children: [/* @__PURE__ */ jsxs(Box, { children: [/* @__PURE__ */ jsx(Typography, {
+				component: "h2",
+				variant: "h5",
+				children: "Netherlands heatmap"
+			}), /* @__PURE__ */ jsx(Typography, {
+				color: "text.secondary",
+				children: "Regional prediction samples from the weather API."
+			})] }), /* @__PURE__ */ jsx(Button, {
+				disabled: isGenerating,
+				loading: isGenerating,
+				onClick: generate,
+				variant: "contained",
+				children: "Generate heatmap"
+			})]
+		}),
+		isGenerating && /* @__PURE__ */ jsxs(Box, {
+			sx: { mt: 3 },
+			children: [/* @__PURE__ */ jsx(LinearProgress, {
+				value: progress,
+				variant: "determinate",
+				sx: {
+					backgroundColor: "rgb(31 41 55)",
+					borderRadius: 1,
+					height: 8,
+					"& .MuiLinearProgress-bar": {
+						backgroundImage: "linear-gradient(90deg, rgb(255 0 0), rgb(0 255 0), rgb(0 0 255))",
+						borderRadius: "inherit"
+					}
+				}
+			}), /* @__PURE__ */ jsxs(Typography, {
+				color: "text.secondary",
+				sx: { mt: 1 },
+				variant: "body2",
+				children: [progress.toFixed(0), "% completed"]
+			})]
+		}),
+		heatmap.length > 0 && /* @__PURE__ */ jsx(Box, {
+			"aria-label": "Sticky-ball probability heatmap",
+			ref: mapContainerRef,
+			sx: {
+				borderRadius: 1,
+				height: {
+					xs: 360,
+					md: 560
+				},
+				mt: 3,
+				overflow: "hidden"
+			}
+		})
+	] }) });
+};
+//#endregion
+//#region src/routes/components/LocationStatus/LocationStatus.tsx
+var LocationStatus = ({ isLoading, locationError, hasDataError, hasCaptureError }) => /* @__PURE__ */ jsxs(Fragment, { children: [
+	isLoading && /* @__PURE__ */ jsxs(Stack, {
+		alignItems: "center",
+		direction: "row",
+		spacing: 1,
+		children: [/* @__PURE__ */ jsx(CircularProgress, { size: 20 }), /* @__PURE__ */ jsx(Typography, {
+			color: "text.secondary",
+			children: "Finding your location…"
+		})]
+	}),
+	locationError && /* @__PURE__ */ jsx(Alert, {
+		severity: "warning",
+		children: locationError
+	}),
+	hasDataError && /* @__PURE__ */ jsx(Alert, {
+		severity: "error",
+		children: "Unable to load weather data. Please try again."
+	}),
+	hasCaptureError && /* @__PURE__ */ jsx(Alert, {
+		severity: "error",
+		children: "Unable to save the measurement. Please try again."
+	})
+] });
+//#endregion
+//#region src/routes/components/MeasurementCard/MeasurementCard.tsx
+var MeasurementCard = ({ coordinates, sticky, isSubmitting, onStickyChange, onSubmit }) => /* @__PURE__ */ jsx(Card, {
+	sx: { flex: 1 },
+	children: /* @__PURE__ */ jsxs(CardContent, { children: [
+		/* @__PURE__ */ jsx(Typography, {
+			component: "h2",
+			variant: "h6",
+			gutterBottom: true,
+			children: "Record your conditions"
+		}),
+		/* @__PURE__ */ jsx(FormControlLabel, {
+			control: /* @__PURE__ */ jsx(Checkbox, {
+				checked: sticky,
+				onChange: (event) => onStickyChange(event.target.checked)
+			}),
+			label: "I have a sticky sack"
+		}),
+		/* @__PURE__ */ jsx(Box, {
+			sx: { mt: 2 },
+			children: /* @__PURE__ */ jsx(Button, {
+				disabled: !coordinates || isSubmitting,
+				loading: isSubmitting,
+				onClick: onSubmit,
+				variant: "contained",
+				children: "Submit measurement"
+			})
+		})
+	] })
+});
+//#endregion
+//#region src/routes/hooks/useCurrentLocation.ts
+var useCurrentLocation = () => {
+	const [coordinates, setCoordinates] = useState(null);
+	const [error, setError] = useState(null);
 	useEffect(() => {
 		if (!navigator.geolocation) {
-			setLocationError("Location services are not supported by this browser.");
+			setError("Location services are not supported by this browser.");
 			return;
 		}
 		navigator.geolocation.getCurrentPosition((position) => {
@@ -232,8 +455,20 @@ function Home() {
 				lat: position.coords.latitude,
 				lon: position.coords.longitude
 			});
-		}, () => setLocationError("Allow location access to load your local forecast."));
+		}, () => setError("Allow location access to load your local forecast."));
 	}, []);
+	return {
+		coordinates,
+		error,
+		isLoading: coordinates === null && error === null
+	};
+};
+//#endregion
+//#region src/routes/page.tsx?tsr-split=component
+function Home() {
+	const queryClient = useQueryClient();
+	const { coordinates, error: locationError, isLoading } = useCurrentLocation();
+	const [sticky, setSticky] = useState(false);
 	const predictionQuery = useQuery({
 		...stickyPredictionQueryOptions(coordinates ?? {
 			lat: 0,
@@ -251,61 +486,11 @@ function Home() {
 	const captureMutation = useMutation({
 		mutationFn: (input) => djangoApi.captureWeatherData(input),
 		onSuccess: async () => {
-			if (coordinates) await Promise.all([queryClient.invalidateQueries({ queryKey: djangoQueryKeys.stickyPrediction(coordinates) }), queryClient.invalidateQueries({ queryKey: djangoQueryKeys.stickyForecast(coordinates) })]);
+			if (!coordinates) return;
+			await Promise.all([queryClient.invalidateQueries({ queryKey: djangoQueryKeys.stickyPrediction(coordinates) }), queryClient.invalidateQueries({ queryKey: djangoQueryKeys.stickyForecast(coordinates) })]);
 		}
 	});
-	const heatmapGrid = useMemo(createHeatmapGrid, []);
-	const generateHeatmap = async () => {
-		setIsGeneratingHeatmap(true);
-		setHeatmapProgress(0);
-		let completed = 0;
-		setHeatmap((await Promise.all(heatmapGrid.map(async (point) => {
-			try {
-				const prediction = await queryClient.fetchQuery(stickyPredictionQueryOptions(point));
-				return {
-					...point,
-					probability: prediction.probability
-				};
-			} catch {
-				return null;
-			} finally {
-				completed += 1;
-				setHeatmapProgress(completed / heatmapGrid.length * 100);
-			}
-		}))).filter((point) => point !== null));
-		setIsGeneratingHeatmap(false);
-	};
-	const isLoadingLocation = coordinates === null && locationError === null;
 	const dataError = predictionQuery.error ?? forecastQuery.error;
-	useEffect(() => {
-		if (!mapContainerRef.current || heatmap.length === 0) return;
-		let isDisposed = false;
-		import("leaflet").then((leaflet) => {
-			if (isDisposed || !mapContainerRef.current) return;
-			if (!mapRef.current) {
-				const instance = leaflet.map(mapContainerRef.current, { scrollWheelZoom: false }).setView([52.370216, 4.895168], 7);
-				leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-					attribution: "© OpenStreetMap contributors",
-					maxZoom: 18
-				}).addTo(instance);
-				mapRef.current = {
-					instance,
-					heatmapLayer: null
-				};
-			}
-			mapRef.current.heatmapLayer?.remove();
-			const heatmapLayer = createIdwLayer(leaflet, heatmap);
-			heatmapLayer.addTo(mapRef.current.instance);
-			mapRef.current.heatmapLayer = heatmapLayer;
-		});
-		return () => {
-			isDisposed = true;
-		};
-	}, [heatmap]);
-	useEffect(() => () => {
-		mapRef.current?.instance.remove();
-		mapRef.current = null;
-	}, []);
 	return /* @__PURE__ */ jsxs(Stack, {
 		spacing: 3,
 		sx: { py: 4 },
@@ -319,26 +504,11 @@ function Home() {
 				color: "text.secondary",
 				children: "Local sticky-ball probability, forecast, and regional heatmap."
 			})] }),
-			isLoadingLocation && /* @__PURE__ */ jsxs(Stack, {
-				alignItems: "center",
-				direction: "row",
-				spacing: 1,
-				children: [/* @__PURE__ */ jsx(CircularProgress, { size: 20 }), /* @__PURE__ */ jsx(Typography, {
-					color: "text.secondary",
-					children: "Finding your location…"
-				})]
-			}),
-			locationError && /* @__PURE__ */ jsx(Alert, {
-				severity: "warning",
-				children: locationError
-			}),
-			dataError && /* @__PURE__ */ jsx(Alert, {
-				severity: "error",
-				children: "Unable to load weather data. Please try again."
-			}),
-			captureMutation.isError && /* @__PURE__ */ jsx(Alert, {
-				severity: "error",
-				children: "Unable to save the measurement. Please try again."
+			/* @__PURE__ */ jsx(LocationStatus, {
+				hasCaptureError: captureMutation.isError,
+				hasDataError: Boolean(dataError),
+				isLoading,
+				locationError
 			}),
 			/* @__PURE__ */ jsxs(Stack, {
 				direction: {
@@ -346,136 +516,22 @@ function Home() {
 					md: "row"
 				},
 				spacing: 3,
-				children: [/* @__PURE__ */ jsx(Card, {
-					sx: { flex: 1 },
-					children: /* @__PURE__ */ jsxs(CardContent, { children: [
-						/* @__PURE__ */ jsx(Typography, {
-							component: "h2",
-							variant: "h6",
-							gutterBottom: true,
-							children: "Record your conditions"
-						}),
-						/* @__PURE__ */ jsx(FormControlLabel, {
-							control: /* @__PURE__ */ jsx(Checkbox, {
-								checked: sticky,
-								onChange: (event) => setSticky(event.target.checked)
-							}),
-							label: "I have a sticky sack"
-						}),
-						/* @__PURE__ */ jsx(Box, {
-							sx: { mt: 2 },
-							children: /* @__PURE__ */ jsx(Button, {
-								disabled: !coordinates || captureMutation.isPending,
-								loading: captureMutation.isPending,
-								onClick: () => coordinates && captureMutation.mutate({
-									...coordinates,
-									sticky
-								}),
-								variant: "contained",
-								children: "Submit measurement"
-							})
-						})
-					] })
-				}), /* @__PURE__ */ jsx(Card, {
-					sx: { flex: 1 },
-					children: /* @__PURE__ */ jsxs(CardContent, { children: [
-						/* @__PURE__ */ jsx(Typography, {
-							component: "h2",
-							variant: "h6",
-							gutterBottom: true,
-							children: "Current probability"
-						}),
-						predictionQuery.isLoading ? /* @__PURE__ */ jsx(CircularProgress, { size: 28 }) : /* @__PURE__ */ jsx(Typography, {
-							component: "p",
-							variant: "h2",
-							children: predictionQuery.data ? formatProbability(predictionQuery.data.probability) : "—"
-						}),
-						/* @__PURE__ */ jsx(Typography, {
-							color: "text.secondary",
-							variant: "body2",
-							sx: { mt: 1 },
-							children: "Estimated probability at your current location."
-						})
-					] })
+				children: [/* @__PURE__ */ jsx(MeasurementCard, {
+					coordinates,
+					isSubmitting: captureMutation.isPending,
+					onStickyChange: setSticky,
+					onSubmit: () => coordinates && captureMutation.mutate({
+						...coordinates,
+						sticky
+					}),
+					sticky
+				}), /* @__PURE__ */ jsx(CurrentProbabilityCard, {
+					isLoading: predictionQuery.isLoading,
+					probability: predictionQuery.data?.probability
 				})]
 			}),
-			/* @__PURE__ */ jsx(Card, { children: /* @__PURE__ */ jsxs(CardContent, { children: [
-				/* @__PURE__ */ jsx(Typography, {
-					component: "h2",
-					variant: "h5",
-					children: "Forecast"
-				}),
-				/* @__PURE__ */ jsx(Typography, {
-					color: "text.secondary",
-					sx: { mb: 2 },
-					children: forecastQuery.data ? `Nearest station: ${forecastQuery.data.nearestStation}` : "Loading nearest weather station…"
-				}),
-				/* @__PURE__ */ jsx(Divider, {}),
-				/* @__PURE__ */ jsx(List, {
-					disablePadding: true,
-					children: forecastQuery.data?.forecast.map((item) => /* @__PURE__ */ jsxs(ListItem, {
-						divider: true,
-						sx: { px: 0 },
-						children: [/* @__PURE__ */ jsx(ListItemText, { primary: dayjs(item.datetime).format("DD MMM YYYY, HH:mm") }), /* @__PURE__ */ jsx(Chip, {
-							label: formatProbability(item.probability),
-							size: "small"
-						})]
-					}, item.datetime))
-				})
-			] }) }),
-			/* @__PURE__ */ jsx(Card, { children: /* @__PURE__ */ jsxs(CardContent, { children: [
-				/* @__PURE__ */ jsxs(Stack, {
-					alignItems: {
-						xs: "stretch",
-						sm: "center"
-					},
-					direction: {
-						xs: "column",
-						sm: "row"
-					},
-					justifyContent: "space-between",
-					spacing: 2,
-					children: [/* @__PURE__ */ jsxs(Box, { children: [/* @__PURE__ */ jsx(Typography, {
-						component: "h2",
-						variant: "h5",
-						children: "Netherlands heatmap"
-					}), /* @__PURE__ */ jsx(Typography, {
-						color: "text.secondary",
-						children: "Regional prediction samples from the weather API."
-					})] }), /* @__PURE__ */ jsx(Button, {
-						disabled: isGeneratingHeatmap,
-						loading: isGeneratingHeatmap,
-						onClick: generateHeatmap,
-						variant: "contained",
-						children: "Generate heatmap"
-					})]
-				}),
-				isGeneratingHeatmap && /* @__PURE__ */ jsxs(Box, {
-					sx: { mt: 3 },
-					children: [/* @__PURE__ */ jsx(LinearProgress, {
-						value: heatmapProgress,
-						variant: "determinate"
-					}), /* @__PURE__ */ jsxs(Typography, {
-						color: "text.secondary",
-						sx: { mt: 1 },
-						variant: "body2",
-						children: [heatmapProgress.toFixed(0), "% completed"]
-					})]
-				}),
-				heatmap.length > 0 && /* @__PURE__ */ jsx(Box, {
-					"aria-label": "Sticky-ball probability heatmap",
-					sx: {
-						borderRadius: 1,
-						height: {
-							xs: 360,
-							md: 560
-						},
-						mt: 3,
-						overflow: "hidden"
-					},
-					ref: mapContainerRef
-				})
-			] }) })
+			/* @__PURE__ */ jsx(ForecastCard, { forecast: forecastQuery.data }),
+			/* @__PURE__ */ jsx(Heatmap, {})
 		]
 	});
 }

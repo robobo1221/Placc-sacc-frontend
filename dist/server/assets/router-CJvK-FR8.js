@@ -33,12 +33,16 @@ var theme = createTheme({
 		MuiPaper: { styleOverrides: { root: { backgroundColor: "#fafafa" } } },
 		MuiCard: { styleOverrides: { root: { backgroundColor: "#fafafa" } } },
 		MuiDrawer: { styleOverrides: { paper: { backgroundColor: "#fafafa" } } },
+		MuiContainer: { styleOverrides: { root: { backgroundColor: "#fafafa" } } },
 		MuiToolbar: { styleOverrides: { root: {
 			backgroundColor: "#1976d2",
 			color: "#fff",
 			paddingLeft: "16px",
 			paddingRight: "16px",
-			boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)"
+			boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+			position: "sticky",
+			top: 0,
+			zIndex: 1100
 		} } }
 	}
 });
@@ -58,7 +62,7 @@ var AppBar = () => {
 					md: "flex"
 				}
 			},
-			children: "Weather App"
+			children: "Placczacc weather"
 		})
 	});
 };
@@ -80,7 +84,7 @@ function RootComponent() {
 }
 //#endregion
 //#region src/routes/page.tsx
-var $$splitComponentImporter = () => import("./page-BVTXqMKJ.js");
+var $$splitComponentImporter = () => import("./page-KKaGl5gR.js");
 //#endregion
 //#region src/routeTree.gen.ts
 var rootRouteChildren = { PageRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({

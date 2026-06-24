@@ -50,6 +50,14 @@ export const theme = createTheme({
       },
     },
 
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#fafafa',
+        },
+      },
+    },
+
     MuiToolbar: {
       styleOverrides: {
         root: {
@@ -58,6 +66,9 @@ export const theme = createTheme({
           paddingLeft: '16px',
           paddingRight: '16px',
           boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1100,
         },
       },
     },
