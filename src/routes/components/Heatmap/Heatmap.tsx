@@ -44,7 +44,7 @@ const loadNetherlandsGeometry = async () => {
   if (netherlandsGeometry) return netherlandsGeometry
 
   const { default: countries50m } =
-    await import('world-atlas/countries-50m.json')
+    await import('world-atlas/countries-10m.json')
   netherlandsGeometry = feature(
     countries50m as any,
     countries50m.objects.countries.geometries.find(
