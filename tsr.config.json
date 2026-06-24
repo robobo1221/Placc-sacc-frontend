@@ -1,3 +1,11 @@
 {
+  "routesDirectory": "./src/routes",
+  "generatedRouteTree": "./src/routeTree.gen.ts",
+  "routeToken": "layout",
+  "indexToken": {
+    "regex": "page"
+  },
+  "routeFileIgnorePattern": "^(?!(?:page|layout|__root)\\.(?:[cm]?[jt]sx?|vue)$).+\\.(?:[cm]?[jt]sx?|vue)$",
+  "autoCodeSplitting": true,
   "target": "react"
 }

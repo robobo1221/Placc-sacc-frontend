@@ -1,65 +1,42 @@
+// src/routes/__root.tsx
+import CssBaseline from '@mui/material/CssBaseline'
+import { ThemeProvider } from '@mui/material/styles'
 import {
+  Outlet,
+  createRootRouteWithContext,
   HeadContent,
   Scripts,
-  createRootRouteWithContext,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+import TanstackQueryProvider from '../integrations/tanstack-query/root-provider'
+import { theme } from '../theme'
 
-import appCss from '../styles.css?url'
+import type { RouterContext } from '../integrations/tanstack-query/root-provider'
+import { Container } from '@mui/material'
+import { AppBar } from '#/routes/components/AppBar/AppBar.tsx'
 
-import type { QueryClient } from '@tanstack/react-query'
-
-interface MyRouterContext {
-  queryClient: QueryClient
-}
-
-export const Route = createRootRouteWithContext<MyRouterContext>()({
-  head: () => ({
-    meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'TanStack Start Starter',
-      },
-    ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
-  }),
-  shellComponent: RootDocument,
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootComponent,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext()
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            TanStackQueryDevtools,
-          ]}
-        />
+        <ThemeProvider theme={theme}>
+          <CssBaseline enableColorScheme />
+          <TanstackQueryProvider queryClient={queryClient}>
+            <AppBar />
+            <Container>
+              <Outlet />
+            </Container>
+          </TanstackQueryProvider>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
