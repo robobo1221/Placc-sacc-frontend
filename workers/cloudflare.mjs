@@ -1,6 +1,8 @@
 import app from '../dist/server/server.js'
 
 const apiPathPattern = /^\/api(?:\/|$)/
+const nameShimScript =
+  '<script>globalThis.__name=globalThis.__name||((target)=>target)</script>'
 
 const proxyApiRequest = (request, apiUrl) => {
   const requestUrl = new URL(request.url)
@@ -24,6 +26,29 @@ const proxyApiRequest = (request, apiUrl) => {
   )
 }
 
+const withBrowserNameShim = async (response) => {
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('text/html')) {
+    return response
+  }
+
+  const html = await response.text()
+
+  const headers = new Headers(response.headers)
+  headers.delete('content-length')
+
+  const body = html.includes('globalThis.__name')
+    ? html
+    : html.replace('</head>', `${nameShimScript}</head>`)
+
+  return new Response(body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText,
+  })
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -42,6 +67,6 @@ export default {
       return assetResponse
     }
 
-    return app.fetch(request, env)
+    return withBrowserNameShim(await app.fetch(request, env))
   },
 }
