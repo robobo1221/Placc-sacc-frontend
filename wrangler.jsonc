@@ -9,6 +9,18 @@
     "directory": "./dist/client"
   },
   "vars": {
-    "DJANGO_API_URL": ""
+    "DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
+  },
+  "env": {
+    "staging": {
+      "vars": {
+        "API_HOST": "https://placczak.rvp.xayo.info/api"
+      }
+    },
+    "production": {
+      "vars": {
+        "API_HOST": "https://placczak.rvp.xayo.info/api"
+      }
+    }
   }
 }
