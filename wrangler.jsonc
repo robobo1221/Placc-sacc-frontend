@@ -14,12 +14,12 @@
   "env": {
     "staging": {
       "vars": {
-        "API_HOST": "https://placczak.rvp.xayo.info/api"
+        "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
       }
     },
     "production": {
       "vars": {
-        "API_HOST": "https://placczak.rvp.xayo.info/api"
+        "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
       }
     }
   }
