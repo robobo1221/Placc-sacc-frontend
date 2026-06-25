@@ -8,18 +8,20 @@
     "binding": "ASSETS",
     "directory": "./dist/client"
   },
-  "vars": {
-    "DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
-  },
+//  "vars": {
+//    "DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
+//  },
   "env": {
     "staging": {
       "vars": {
-        "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
+        "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api",
+        "DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
       }
     },
     "production": {
       "vars": {
-        "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
+        "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api",
+        "DJANGO_API_URL": "https://placczak.rvp.xayo.info/api"
       }
     }
   }
