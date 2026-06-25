@@ -1,6 +1,8 @@
 allowBuilds:
-  esbuild: false
-  unrs-resolver: false
+  esbuild: true
+  unrs-resolver: true
+  sharp: true
+  workerd: true
 minimumReleaseAgeExclude:
   - playwright-core@1.61.1
   - playwright@1.61.1
