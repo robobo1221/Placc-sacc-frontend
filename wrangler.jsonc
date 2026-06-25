@@ -22,7 +22,7 @@
       "vars": {
         "VITE_DJANGO_API_URL": "https://placczak.rvp.xayo.info/api",
         "DJANGO_API_URL": "https://placczak.rvp.xayo.info/api",
-      },
+      },"name": "placc-sacc-frontend",
     },
   },
 }
