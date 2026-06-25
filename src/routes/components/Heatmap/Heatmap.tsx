@@ -3,403 +3,58 @@ import {
   Button,
   Card,
   CardContent,
+  IconButton,
   LinearProgress,
+  Popover,
   Stack,
   Typography,
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useQueryClient } from '@tanstack/react-query'
 import 'leaflet/dist/leaflet.css'
+import { X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { feature } from 'topojson-client'
 
 import { stickyPredictionQueryOptions } from '#/api/django-queries'
 import { useSnackbar } from '#/components/SnackbarProvider/SnackbarProvider'
+import {
+  createHeatmapGrid,
+  createHeatmapLayerStyle,
+  createIdwLayer,
+  getHeatmapSelection,
+  loadLeafletModule,
+  loadNetherlandsGeometry,
+  NETHERLANDS_MAP_BOUNDS,
+  preloadMapDependencies,
+} from '#/routes/components/Heatmap/utils/heatmapRendering.ts'
 
 import type { Coordinates } from '#/api/django-client'
+import type {
+  HeatmapMapRef,
+  HeatmapPoint,
+  HeatmapSelection,
+} from '#/routes/components/Heatmap/utils/heatmapRendering.ts'
+import type { LeafletMouseEvent } from 'leaflet'
 
-type HeatmapPoint = Coordinates & { probability: number }
 type Prediction = { probability: number }
-type LeafletModule = typeof import('leaflet')
-type LeafletMap = import('leaflet').Map
-type LeafletLayer = import('leaflet').Layer
-
-const NETHERLANDS_HEATMAP_BOUNDS = {
-  latMin: 50.750383,
-  latMax: 53.5,
-  lonMin: 3.358402,
-  lonMax: 7.22751,
-}
-
-const NETHERLANDS_MAP_BOUNDS: [[number, number], [number, number]] = [
-  [50.2, 2.5],
-  [54, 8],
-]
-
-const HEATMAP_ALPHA = Math.round(255 * 0.58)
-const IDW_POWER = 3
-const MAX_INTERPOLATION_PIXELS = 90_000
-const MAX_INTERPOLATION_SCALE = 0.5
-const COLOR_LUT_SIZE = 256
 
 const PREDICTION_STALE_TIME = 1000
 const PREDICTION_GC_TIME = 1000
-
-type NetherlandsGeometry = GeoJSON.Feature<
-  GeoJSON.Polygon | GeoJSON.MultiPolygon
->
-
-let leafletModulePromise: Promise<LeafletModule> | undefined
-let netherlandsGeometryPromise: Promise<NetherlandsGeometry> | undefined
-let netherlandsGeometry: NetherlandsGeometry | undefined
-
-const loadLeafletModule = () => {
-  leafletModulePromise ??= import('leaflet')
-  return leafletModulePromise
-}
-
-const loadNetherlandsGeometry = async () => {
-  if (netherlandsGeometry) return netherlandsGeometry
-
-  netherlandsGeometryPromise ??= import('world-atlas/countries-10m.json').then(
-    ({ default: countries50m }) => {
-      netherlandsGeometry = feature(
-        countries50m as any,
-        countries50m.objects.countries.geometries.find(
-          ({ id }) => id === '528',
-        )! as any,
-      ) as NetherlandsGeometry
-
-      return netherlandsGeometry
-    },
-  )
-
-  return netherlandsGeometryPromise
-}
-
-const preloadMapDependencies = () => {
-  void loadLeafletModule()
-  void loadNetherlandsGeometry()
-}
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max)
-
-const hslToRgb = (hue: number, saturation: number, lightness: number) => {
-  const s = saturation / 100
-  const l = lightness / 100
-  const c = (1 - Math.abs(2 * l - 1)) * s
-  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1))
-  const m = l - c / 2
-
-  let r = 0
-  let g = 0
-  let b = 0
-
-  if (hue < 60) {
-    r = c
-    g = x
-  } else if (hue < 120) {
-    r = x
-    g = c
-  } else if (hue < 180) {
-    g = c
-    b = x
-  } else if (hue < 240) {
-    g = x
-    b = c
-  } else if (hue < 300) {
-    r = x
-    b = c
-  } else {
-    r = c
-    b = x
-  }
-
-  return {
-    r: Math.round((r + m) * 255),
-    g: Math.round((g + m) * 255),
-    b: Math.round((b + m) * 255),
-  }
-}
-
-const createColorLookupTable = () => {
-  const table = new Uint8ClampedArray(COLOR_LUT_SIZE * 4)
-
-  for (let index = 0; index < COLOR_LUT_SIZE; index += 1) {
-    const probability = index / (COLOR_LUT_SIZE - 1)
-    const hue = Math.round((1 - probability) * 240)
-    const { r, g, b } = hslToRgb(hue, 85, 48)
-    const offset = index * 4
-
-    table[offset] = r
-    table[offset + 1] = g
-    table[offset + 2] = b
-    table[offset + 3] = HEATMAP_ALPHA
-  }
-
-  return table
-}
-
-const COLOR_LOOKUP_TABLE = createColorLookupTable()
-
-const writeColor = (
-  target: Uint8ClampedArray,
-  targetOffset: number,
-  probability: number,
-) => {
-  const colorIndex =
-    Math.round(clamp(probability, 0, 1) * (COLOR_LUT_SIZE - 1)) * 4
-
-  target[targetOffset] = COLOR_LOOKUP_TABLE[colorIndex]
-  target[targetOffset + 1] = COLOR_LOOKUP_TABLE[colorIndex + 1]
-  target[targetOffset + 2] = COLOR_LOOKUP_TABLE[colorIndex + 2]
-  target[targetOffset + 3] = COLOR_LOOKUP_TABLE[colorIndex + 3]
-}
-
-const getInterpolationScale = (width: number, height: number) => {
-  const totalPixels = width * height
-
-  if (totalPixels <= MAX_INTERPOLATION_PIXELS) {
-    return 1
-  }
-
-  return Math.min(
-    MAX_INTERPOLATION_SCALE,
-    Math.sqrt(MAX_INTERPOLATION_PIXELS / totalPixels),
-  )
-}
-
-const createHeatmapGrid = (): Coordinates[] => {
-  const rows = 4
-  const columns = 6
-
-  return Array.from({ length: rows * columns }, (_, index) => {
-    const row = Math.floor(index / columns)
-    const column = index % columns
-
-    return {
-      lat:
-        NETHERLANDS_HEATMAP_BOUNDS.latMin +
-        ((NETHERLANDS_HEATMAP_BOUNDS.latMax -
-          NETHERLANDS_HEATMAP_BOUNDS.latMin) *
-          row) /
-          (rows - 1),
-      lon:
-        NETHERLANDS_HEATMAP_BOUNDS.lonMin +
-        ((NETHERLANDS_HEATMAP_BOUNDS.lonMax -
-          NETHERLANDS_HEATMAP_BOUNDS.lonMin) *
-          column) /
-          (columns - 1),
-    }
-  })
-}
-
-const createIdwLayer = (
-  leaflet: LeafletModule,
-  geometry: NetherlandsGeometry,
-  points: HeatmapPoint[],
-): LeafletLayer => {
-  const IdwLayer = leaflet.Layer.extend({
-    initialize(this: any) {
-      this.frame = null
-      this.offscreenCanvas = document.createElement('canvas')
-      this.offscreenContext = this.offscreenCanvas.getContext('2d', {
-        willReadFrequently: false,
-      })
-    },
-
-    onAdd(this: any, map: LeafletMap) {
-      this.map = map
-      this.canvas = leaflet.DomUtil.create(
-        'canvas',
-        'leaflet-layer leaflet-zoom-animated',
-      )
-
-      this.canvas.style.pointerEvents = 'none'
-
-      map.getPanes().overlayPane.appendChild(this.canvas)
-
-      this.scheduleRedraw = this.scheduleRedraw.bind(this)
-      this.redraw = this.redraw.bind(this)
-
-      map.on('moveend zoomend resize', this.scheduleRedraw)
-
-      this.scheduleRedraw()
-    },
-
-    onRemove(this: any, map: LeafletMap) {
-      map.off('moveend zoomend resize', this.scheduleRedraw)
-
-      if (this.frame !== null) {
-        cancelAnimationFrame(this.frame)
-        this.frame = null
-      }
-
-      this.canvas.remove()
-    },
-
-    scheduleRedraw(this: any) {
-      if (this.frame !== null) return
-
-      this.frame = requestAnimationFrame(() => {
-        this.frame = null
-        this.redraw()
-      })
-    },
-
-    redraw(this: any) {
-      const map = this.map as LeafletMap
-      const canvas = this.canvas as HTMLCanvasElement
-      const context = canvas.getContext('2d')
-
-      if (!context) return
-
-      const size = map.getSize()
-      const topLeft = map.containerPointToLayerPoint([0, 0])
-
-      if (canvas.width !== size.x) {
-        canvas.width = size.x
-      }
-
-      if (canvas.height !== size.y) {
-        canvas.height = size.y
-      }
-
-      leaflet.DomUtil.setPosition(canvas, topLeft)
-
-      context.clearRect(0, 0, size.x, size.y)
-
-      if (points.length === 0) return
-
-      const scale = getInterpolationScale(size.x, size.y)
-      const interpolationWidth = Math.max(1, Math.ceil(size.x * scale))
-      const interpolationHeight = Math.max(1, Math.ceil(size.y * scale))
-
-      const offscreenCanvas = this.offscreenCanvas as HTMLCanvasElement
-      const offscreenContext = this.offscreenContext as CanvasRenderingContext2D
-
-      if (!offscreenContext) return
-
-      if (offscreenCanvas.width !== interpolationWidth) {
-        offscreenCanvas.width = interpolationWidth
-      }
-
-      if (offscreenCanvas.height !== interpolationHeight) {
-        offscreenCanvas.height = interpolationHeight
-      }
-
-      const sampleCount = points.length
-      const sampleXs = new Float32Array(sampleCount)
-      const sampleYs = new Float32Array(sampleCount)
-      const sampleProbabilities = new Float32Array(sampleCount)
-
-      for (let index = 0; index < sampleCount; index += 1) {
-        const point = points[index]
-        const projectedPoint = map.latLngToContainerPoint([
-          point.lat,
-          point.lon,
-        ])
-
-        sampleXs[index] = projectedPoint.x * scale
-        sampleYs[index] = projectedPoint.y * scale
-        sampleProbabilities[index] = point.probability
-      }
-
-      const imageData = offscreenContext.createImageData(
-        interpolationWidth,
-        interpolationHeight,
-      )
-
-      const data = imageData.data
-
-      for (let y = 0; y < interpolationHeight; y += 1) {
-        for (let x = 0; x < interpolationWidth; x += 1) {
-          let numerator = 0
-          let denominator = 0
-
-          for (
-            let sampleIndex = 0;
-            sampleIndex < sampleCount;
-            sampleIndex += 1
-          ) {
-            const dx = sampleXs[sampleIndex] - x
-            const dy = sampleYs[sampleIndex] - y
-            const distanceSquared = dx * dx + dy * dy
-
-            if (distanceSquared < 0.0001) {
-              numerator = sampleProbabilities[sampleIndex]
-              denominator = 1
-              break
-            }
-
-            const weight = 1 / Math.pow(distanceSquared, IDW_POWER / 2)
-
-            numerator += sampleProbabilities[sampleIndex] * weight
-            denominator += weight
-          }
-
-          const probability = denominator === 0 ? 0 : numerator / denominator
-          const offset = (y * interpolationWidth + x) * 4
-
-          writeColor(data, offset, probability)
-        }
-      }
-
-      offscreenContext.putImageData(imageData, 0, 0)
-
-      const polygons =
-        geometry.geometry.type === 'Polygon'
-          ? [geometry.geometry.coordinates]
-          : geometry.geometry.coordinates
-
-      context.save()
-      context.beginPath()
-
-      for (const polygon of polygons) {
-        for (const ring of polygon) {
-          ring.forEach(([lon, lat], index) => {
-            const point = map.latLngToContainerPoint([lat, lon])
-
-            if (index === 0) {
-              context.moveTo(point.x, point.y)
-            } else {
-              context.lineTo(point.x, point.y)
-            }
-          })
-
-          context.closePath()
-        }
-      }
-
-      context.clip('evenodd')
-
-      context.imageSmoothingEnabled = true
-      context.imageSmoothingQuality = 'high'
-
-      context.drawImage(
-        offscreenCanvas,
-        0,
-        0,
-        interpolationWidth,
-        interpolationHeight,
-        0,
-        0,
-        size.x,
-        size.y,
-      )
-
-      context.restore()
-    },
-  })
-
-  return new IdwLayer()
-}
 
 type HeatmapProps = {
   regenerateToken: number
 }
 
+type HeatmapPopoverState = {
+  anchorPosition: {
+    left: number
+    top: number
+  }
+  selection: HeatmapSelection
+}
+
 export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
+  const theme = useTheme()
   const queryClient = useQueryClient()
   const { showSnackbar } = useSnackbar()
 
@@ -407,20 +62,20 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
   const [progress, setProgress] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isMapReady, setIsMapReady] = useState(false)
+  const [popoverState, setPopoverState] = useState<HeatmapPopoverState | null>(
+    null,
+  )
 
   const mapContainerRef = useRef<HTMLDivElement>(null)
-
-  const mapRef = useRef<{
-    instance: LeafletMap
-    heatmapLayer: LeafletLayer | null
-    leaflet: LeafletModule
-    geometry: NetherlandsGeometry
-  } | null>(null)
-
+  const mapRef = useRef<HeatmapMapRef | null>(null)
   const generationRef = useRef(0)
   const heatmapRef = useRef<HeatmapPoint[]>([])
 
   const grid = useMemo(createHeatmapGrid, [])
+  const heatmapLayerStyle = useMemo(
+    () => createHeatmapLayerStyle(theme.heatmap),
+    [theme.heatmap],
+  )
 
   const getPredictionQueryOptions = useCallback((point: Coordinates) => {
     return {
@@ -440,6 +95,32 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
     },
     [queryClient],
   )
+
+  const handleMapClick = useCallback((event: LeafletMouseEvent) => {
+    const map = mapRef.current?.instance
+
+    if (!map) return
+
+    const selection = getHeatmapSelection(
+      map,
+      event.latlng.lat,
+      event.latlng.lng,
+      heatmapRef.current,
+    )
+
+    if (!selection) {
+      setPopoverState(null)
+      return
+    }
+
+    setPopoverState({
+      anchorPosition: {
+        left: event.originalEvent.clientX,
+        top: event.originalEvent.clientY,
+      },
+      selection,
+    })
+  }, [])
 
   const generate = useCallback(async () => {
     const generation = generationRef.current + 1
@@ -559,6 +240,10 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
 
   useEffect(() => {
     heatmapRef.current = heatmap
+
+    if (heatmap.length === 0) {
+      setPopoverState(null)
+    }
   }, [heatmap])
 
   useEffect(() => {
@@ -584,7 +269,7 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
 
         leaflet
           .tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
+            attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 18,
           })
           .addTo(instance)
@@ -593,7 +278,7 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
           .geoJSON(geometry, {
             interactive: false,
             style: {
-              color: '#263238',
+              color: heatmapLayerStyle.boundaryColor,
               fill: false,
               weight: 1.5,
             },
@@ -616,7 +301,19 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
     return () => {
       isDisposed = true
     }
-  }, [])
+  }, [heatmapLayerStyle.boundaryColor])
+
+  useEffect(() => {
+    if (!isMapReady || !mapRef.current) return
+
+    const { instance } = mapRef.current
+
+    instance.on('click', handleMapClick)
+
+    return () => {
+      instance.off('click', handleMapClick)
+    }
+  }, [handleMapClick, isMapReady])
 
   useEffect(() => {
     if (!isMapReady || !mapRef.current) return
@@ -630,12 +327,17 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
       return
     }
 
-    const heatmapLayer = createIdwLayer(leaflet, geometry, heatmap)
+    const heatmapLayer = createIdwLayer(
+      leaflet,
+      geometry,
+      heatmap,
+      heatmapLayerStyle,
+    )
 
     heatmapLayer.addTo(instance)
 
     mapRef.current.heatmapLayer = heatmapLayer
-  }, [heatmap, isMapReady])
+  }, [heatmap, heatmapLayerStyle, isMapReady])
 
   useEffect(() => {
     if (regenerateToken > 0) {
@@ -686,12 +388,11 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
               value={progress}
               variant="determinate"
               sx={{
-                backgroundColor: 'rgb(31 41 55)',
+                backgroundColor: theme.heatmap.progressBarBackground,
                 borderRadius: 1,
                 height: 8,
                 '& .MuiLinearProgress-bar': {
-                  backgroundImage:
-                    'linear-gradient(90deg, rgb(255 0 0), rgb(0 255 0), rgb(0 0 255))',
+                  backgroundImage: theme.heatmap.progressBarGradient,
                   borderRadius: 'inherit',
                 },
               }}
@@ -713,6 +414,59 @@ export const Heatmap = ({ regenerateToken }: HeatmapProps) => {
             overflow: 'hidden',
           }}
         />
+
+        <Popover
+          anchorPosition={popoverState?.anchorPosition}
+          anchorReference="anchorPosition"
+          onClose={() => setPopoverState(null)}
+          open={popoverState !== null}
+          sx={{
+            zIndex: (muiTheme) => muiTheme.zIndex.tooltip,
+          }}
+          slotProps={{
+            paper: {
+              sx: {
+                p: 1.5,
+              },
+            },
+          }}
+          transformOrigin={{
+            horizontal: 'left',
+            vertical: 'top',
+          }}
+        >
+          {popoverState && (
+            <Stack spacing={0.5}>
+              <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={1}
+              >
+                <Typography fontWeight={600} variant="body2">
+                  {Math.round(popoverState.selection.probability * 100)}%
+                  probability
+                </Typography>
+
+                <IconButton
+                  aria-label="Close location details"
+                  onClick={() => setPopoverState(null)}
+                  size="small"
+                >
+                  <X size={16} />
+                </IconButton>
+              </Stack>
+
+              <Typography color="text.secondary" variant="caption">
+                Latitude: {popoverState.selection.lat.toFixed(5)}
+              </Typography>
+
+              <Typography color="text.secondary" variant="caption">
+                Longitude: {popoverState.selection.lon.toFixed(5)}
+              </Typography>
+            </Stack>
+          )}
+        </Popover>
       </CardContent>
     </Card>
   )
