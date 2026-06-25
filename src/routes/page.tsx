@@ -1,20 +1,17 @@
-import { Box, Stack, Typography } from '@mui/material'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Stack } from '@mui/material'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { djangoApi } from '#/api/django-client'
-import {
-  djangoQueryKeys,
-  stickyForecastQueryOptions,
-  stickyPredictionQueryOptions,
-} from '#/api/django-queries'
+import { djangoQueryKeys } from '#/api/django-queries'
 import { CurrentProbabilityCard } from '#/routes/components/CurrentProbabilityCard/CurrentProbabilityCard'
 import { ForecastCard } from '#/routes/components/ForecastCard/ForecastCard'
 import { Heatmap } from '#/routes/components/Heatmap/Heatmap'
+import { LocationPicker } from '#/routes/components/LocationPicker/LocationPicker'
 import { LocationStatus } from '#/routes/components/LocationStatus/LocationStatus'
 import { MeasurementCard } from '#/routes/components/MeasurementCard/MeasurementCard'
-import { useCurrentLocation } from '#/routes/hooks/useCurrentLocation'
+import { useWeatherLocation } from '#/routes/hooks/useWeatherLocation'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -22,30 +19,28 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const queryClient = useQueryClient()
-  const { coordinates, error: locationError, isLoading } = useCurrentLocation()
+  const {
+    coordinates,
+    forecastQuery,
+    isBrowserLocationLoading,
+    locationError,
+    predictionQuery,
+    selectManualCoordinates,
+    useBrowserCoordinates,
+  } = useWeatherLocation()
   const [sticky, setSticky] = useState(false)
   const [heatmapRegenerateToken, setHeatmapRegenerateToken] = useState(0)
 
-  const predictionQuery = useQuery({
-    ...stickyPredictionQueryOptions(coordinates ?? { lat: 0, lon: 0 }),
-    enabled: coordinates !== null,
-  })
-  const forecastQuery = useQuery({
-    ...stickyForecastQueryOptions(coordinates ?? { lat: 0, lon: 0 }),
-    enabled: coordinates !== null,
-  })
   const captureMutation = useMutation({
     mutationFn: (input: { lat: number; lon: number; sticky: boolean }) =>
       djangoApi.captureWeatherData(input),
     onSuccess: async (_, input) => {
-      if (!coordinates) return
-
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: djangoQueryKeys.stickyPrediction(coordinates),
+          queryKey: djangoQueryKeys.stickyPrediction(input),
         }),
         queryClient.invalidateQueries({
-          queryKey: djangoQueryKeys.stickyForecast(coordinates),
+          queryKey: djangoQueryKeys.stickyForecast(input),
         }),
       ])
 
@@ -62,9 +57,18 @@ function Home() {
       <LocationStatus
         hasCaptureError={captureMutation.isError}
         hasDataError={Boolean(dataError)}
-        isLoading={isLoading}
+        isLoading={isBrowserLocationLoading}
         locationError={locationError}
       />
+
+      {(locationError || coordinates) && (
+        <LocationPicker
+          browserLocationAvailable={locationError === null}
+          coordinates={coordinates}
+          onSelect={selectManualCoordinates}
+          onUseBrowserLocation={useBrowserCoordinates}
+        />
+      )}
 
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
         <MeasurementCard
