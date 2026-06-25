@@ -52,3 +52,19 @@ and proxy `/api/` to Django. If the API is on another domain, set
 `VITE_DJANGO_API_URL` to its public `/api` URL at build time and configure
 Django CORS for the frontend origin. `VITE_*` values are public client
 configuration, not secret storage.
+
+## Cloudflare Workers
+
+This app can run on Cloudflare Workers through `wrangler.jsonc`. Wrangler is
+needed for local Worker testing and deployment:
+
+```bash
+pnpm cf:dry-run
+pnpm cf:dev
+pnpm cf:deploy
+```
+
+The Worker serves static assets from `dist/client`, falls back to the TanStack
+Start SSR handler, and exposes `GET /health`. Set the Cloudflare
+`DJANGO_API_URL` variable to the public Django `/api` URL when you want the
+Worker to proxy same-origin `/api/*` requests.

@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "placc-sacc-frontend",
+  "main": "workers/cloudflare.mjs",
+  "compatibility_date": "2026-06-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist/client"
+  },
+  "vars": {
+    "DJANGO_API_URL": ""
+  }
+}
