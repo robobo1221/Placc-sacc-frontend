@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import { playwright } from '@vitest/browser-playwright'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 const dirname =
   typeof __dirname !== 'undefined'
     ? __dirname
@@ -23,7 +25,6 @@ const config = defineConfig({
   plugins: [
     devtools(),
     tailwindcss(),
-
     // React Start owns the Vite route generator. Keep this in sync with
     // tsr.config.json so routes created while Vite is running use the same
     // page/layout conventions as the CLI generator.
@@ -38,8 +39,12 @@ const config = defineConfig({
         autoCodeSplitting: true,
       },
     }),
-
     viteReact(),
+    cloudflare({
+      viteEnvironment: {
+        name: "ssr"
+      }
+    })
   ],
 
   test: {
